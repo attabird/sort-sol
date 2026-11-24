@@ -48,3 +48,7 @@ The comments in the code say where each number comes from.
 ## Credit
 
 Created by Henrik Pultz Melbye, [attabird](https://www.attabird.com).
+
+## License
+
+MIT. See [LICENSE](LICENSE).
