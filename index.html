@@ -86,6 +86,7 @@
     <div class="notes">
       <p class="caption" id="caption">Dusk &middot; watching from the dike</p>
       <p class="hint" id="hint">Scroll to move through the evening</p>
+      <p class="hint" id="hintStartle">Click the flock to startle it</p>
       <p class="credit">Created by Henrik Pultz Melbye</p>
     </div>
     <div class="controls">
@@ -759,6 +760,31 @@
   const HUNT = { speed: 15, press: 2.5, gap: 30, gapMore: 20 };
   const waves = new Float32Array(12); for (let i = 0; i < 3; i++) waves[i * 4 + 3] = -1e4;
   let waveIdx = 0, lastWave = -1e4, onWave = null;
+
+  // A click or a tap on the flock startles it, as a falcon would: the same escape wave (three pulses, each weaker than
+  // the last) runs out from the bird nearest the spot. nx, ny run from -1 to 1 across the sky, y up. The bird is the
+  // simulated one closest to the line of sight, within about two and a half degrees of it; empty sky startles nobody.
+  // At most one startle every 1.2 seconds, so a burst of clicks can't wipe out a falcon's wave still running.
+  let startleAt = -1e4;
+  function startle(nx, ny) {
+    if (simT - startleAt < 1.2) return false;
+    const aspect = (canvas.clientWidth || 1) / (canvas.clientHeight || 1), t = Math.tan(cam.fov * Math.PI / 360);
+    const { eye: e, r, u, f: fw } = cam, sx = nx * aspect * t, sy = ny * t;
+    let dx = fw[0] + r[0] * sx + u[0] * sy, dy = fw[1] + r[1] * sx + u[1] * sy, dz = fw[2] + r[2] * sx + u[2] * sy;
+    const dl = Math.hypot(dx, dy, dz) || 1; dx /= dl; dy /= dl; dz /= dl;
+    let best = -1, bs = 0.045 * 0.045;      // tan² of the angle off the line of sight
+    for (let i = 0; i < active; i++) {
+      const qx = px[i] - e[0], qy = py[i] - e[1], qz = pz[i] - e[2], a = qx * dx + qy * dy + qz * dz;
+      if (a < 0.5) continue;
+      const s = (qx * qx + qy * qy + qz * qz - a * a) / (a * a);
+      if (s < bs) { bs = s; best = i; }
+    }
+    if (best < 0) return false;
+    waves[waveIdx * 4] = px[best]; waves[waveIdx * 4 + 1] = py[best]; waves[waveIdx * 4 + 2] = pz[best]; waves[waveIdx * 4 + 3] = simT;
+    waveIdx = (waveIdx + 1) % 3; startleAt = simT;
+    if (onWave) onWave();
+    return true;
+  }
 
   // The falcon comes from above and makes for the near edge of the flock's main body, not its middle: it flies at the
   // nearest bird of those within 70 m of where the flock is thickest (one in four is looked at; the long thin tail is
@@ -1831,13 +1857,20 @@
   let skip = 0, touchY = null;
   // the page says so under the caption, until the visitor has done it once
   const hintEl = document.getElementById('hint');
-  if (window.matchMedia && matchMedia('(pointer: coarse)').matches) hintEl.textContent = 'Swipe up to move through the evening';
+  const startleHint = document.getElementById('hintStartle');
+  if (window.matchMedia && matchMedia('(pointer: coarse)').matches) { hintEl.textContent = 'Swipe up to move through the evening'; startleHint.textContent = 'Tap the flock to startle it'; }
   const hurry = px => { if (!playing) return; skip = Math.max(-tl, Math.min(T_LAST - tl, skip + px * 0.02)); if (Math.abs(px) > 2) hintEl.classList.add('used'); };
   if (!inline) {
     addEventListener('wheel', e => { e.preventDefault(); hurry(e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1)); }, { passive: false });
     canvas.addEventListener('touchstart', e => { touchY = e.touches.length === 1 ? e.touches[0].clientY : null; }, { passive: true });
     canvas.addEventListener('touchmove', e => { if (touchY === null || e.touches.length !== 1) return; const y = e.touches[0].clientY; hurry((touchY - y) * 2.5); touchY = y; }, { passive: true });
     canvas.addEventListener('touchend', () => { touchY = null; }, { passive: true });
+    // a click or tap anywhere but the controls startles the flock there (a swipe is not a click, so it still scrolls)
+    addEventListener('click', e => {
+      if (e.target.closest && e.target.closest('button, a, input, label, .controls')) return;
+      const b = canvas.getBoundingClientRect();
+      if (startle((e.clientX - b.left) / (b.width || 1) * 2 - 1, 1 - (e.clientY - b.top) / (b.height || 1) * 2)) startleHint.classList.add('used');
+    });
   }
   let playing = !reduced;
   if (reduced) { replayBtn.textContent = 'Play'; hintEl.classList.add('used'); }      // nothing to scroll through until it plays
@@ -2033,6 +2066,8 @@
     // for the page around an inline scene: the journey's goal (snap: go there at once) and its length in seconds
     scrub: (t, snap) => { tlGoal = Math.max(0, t); if (snap) tl = tlGoal; }, journey: T_MERGE + D_MERGE,
     still: () => !playing,
+    // and a click on it: startles the flock at that spot (nx, ny from -1 to 1, y up); true if a bird was there
+    startle: (nx, ny) => startle(nx, ny),
     stats: () => ({ active, copies, birds: active * copies, ema, tl, simMs, turnRate, turnDir, climb: cf[1], pad: mPad ? mPad.g.gain.value : null,
       roll, eyeSpeed: eyeSp, near50, near30, repicks, jumps, calm, shade, lookLead, fov: cam.fov, peak: { roll: peak.roll, eye: peak.eye, turn: peak.turn } }),
     seed: n => { resetFlock(n); draw(clock); return n; }, hold: on => { frozen = on !== false; return frozen; }, near: nearField,
