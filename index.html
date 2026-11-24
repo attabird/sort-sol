@@ -68,6 +68,7 @@
   .controls button:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
   .controls button[aria-pressed="true"] { color: var(--ember); border-color: var(--ember); }
   .inline .hud, .inline .fallback { display: none !important; }
+  .inline #sky { touch-action: auto; }   /* inline the page scrolls through this sky, so it must never claim a swipe */
   .fallback { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--ink-dim);
     font-size: 0.8rem; letter-spacing: 0.08em; line-height: 1.8; }
 </style>
@@ -752,29 +753,55 @@
   placeBirds();
 
   const focus = [lead.x, lead.y, lead.z], focusSm = [lead.x, lead.y, lead.z], focusDir = [1, 0, 0];
-  const falcon = { on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 1, t: 0, next: simT + 17 };
+  const falcon = { on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 1, t: 0, next: simT + 17, reach: -1, ax: 0, ay: 0, az: 0, near: 1e9 };
+  // The falcon: its speed (attacks are cited at 11 to 15 m/s), how long it presses in once birds flee it, and the
+  // least and the spread of the pause between its visits, in seconds.
+  const HUNT = { speed: 15, press: 2.5, gap: 30, gapMore: 20 };
   const waves = new Float32Array(12); for (let i = 0; i < 3; i++) waves[i * 4 + 3] = -1e4;
   let waveIdx = 0, lastWave = -1e4, onWave = null;
 
+  // The falcon comes from above and makes for the near edge of the flock's main body, not its middle: it flies at the
+  // nearest bird of those within 70 m of where the flock is thickest (one in four is looked at; the long thin tail is
+  // left alone), and at where that bird will be when it gets there. When birds begin to flee it presses in for a
+  // moment, then pulls up and away. An attack that has not reached the flock in 16 seconds is given up.
   function updateFalcon(dt) {
-    const f = falcon, SP = 30;
+    const f = falcon, SP = HUNT.speed;
     if (!f.on) {
       if (simT > f.next && land <= 0) {      // no falcon comes once the flock is going down
         const a = rnd2() * 6.283;
         f.x = focus[0] + Math.cos(a) * 190; f.y = focus[1] + 35 + rnd2() * 45; f.z = focus[2] + Math.sin(a) * 190;
         const dx = focus[0] - f.x, dy = focus[1] - f.y, dz = focus[2] - f.z, l = Math.hypot(dx, dy, dz);
-        f.vx = dx / l * SP; f.vy = dy / l * SP; f.vz = dz / l * SP; f.on = true; f.t = 0;
+        f.vx = dx / l * SP; f.vy = dy / l * SP; f.vz = dz / l * SP; f.on = true; f.t = 0; f.reach = -1;
+        f.ax = focus[0]; f.ay = focus[1]; f.az = focus[2];
       }
       return;
     }
     f.t += dt;
-    const dx = focus[0] - f.x, dy = focus[1] - f.y, dz = focus[2] - f.z, l = Math.hypot(dx, dy, dz) || 1;
-    if (f.t < 5.5) { const k = 1.6 * dt; f.vx += (dx / l * SP - f.vx) * k; f.vy += (dy / l * SP - f.vy) * k; f.vz += (dz / l * SP - f.vz) * k; }
+    let nd = 1e12, nb = -1, ad = 1e12, ab = 0;
+    for (let i = 0; i < active; i += 4) {
+      const dx = px[i] - f.x, dy = py[i] - f.y, dz = pz[i] - f.z, d = dx * dx + dy * dy + dz * dz;
+      if (d < ad) { ad = d; ab = i; }
+      if (d < nd) { const cx = px[i] - focus[0], cy = py[i] - focus[1], cz = pz[i] - focus[2]; if (cx * cx + cy * cy + cz * cz < 4900) { nd = d; nb = i; } }
+    }
+    if (nb < 0) { nb = ab; nd = ad; }
+    nd = Math.sqrt(nd); f.near = nd;
+    if (f.reach < 0 && nd < 32) f.reach = f.t;
+    const k = 1.6 * dt;
+    if (f.reach < 0 || f.t - f.reach < HUNT.press) {
+      const lead = Math.min(3, nd / SP), m = 1 - Math.exp(-dt * 4);
+      f.ax += (px[nb] + vx[nb] * lead - f.ax) * m; f.ay += (py[nb] + vy[nb] * lead - f.ay) * m; f.az += (pz[nb] + vz[nb] * lead - f.az) * m;
+      const dx = f.ax - f.x, dy = f.ay - f.y, dz = f.az - f.z, l = Math.hypot(dx, dy, dz) || 1;
+      f.vx += (dx / l * SP - f.vx) * k; f.vy += (dy / l * SP - f.vy) * k; f.vz += (dz / l * SP - f.vz) * k;
+    } else {      // out of the flock again: away from where it is thickest, and up
+      const dx = f.x - focus[0], dz = f.z - focus[2], l = Math.hypot(dx, dz) || 1;
+      f.vx += (dx / l * SP * 0.8 - f.vx) * k; f.vy += (SP * 0.6 - f.vy) * k; f.vz += (dz / l * SP * 0.8 - f.vz) * k;
+    }
+    const sp = SP / (Math.hypot(f.vx, f.vy, f.vz) || 1); f.vx *= sp; f.vy *= sp; f.vz *= sp;      // it turns without slowing
     f.x += f.vx * dt; f.y += f.vy * dt; f.z += f.vz * dt;
     if (f.y < 14) { f.y = 14; f.vy = Math.abs(f.vy) * 0.3; }
     // the birds nearest the falcon start an escape wave that runs through the flock
-    if (l < 85 && simT - lastWave > 4.2) { waves[waveIdx * 4] = f.x; waves[waveIdx * 4 + 1] = f.y; waves[waveIdx * 4 + 2] = f.z; waves[waveIdx * 4 + 3] = simT; waveIdx = (waveIdx + 1) % 3; lastWave = simT; if (onWave) onWave(); }
-    if (f.t > 12) { f.on = false; f.next = simT + 16 + rnd2() * 12; }
+    if (nd < 40 && simT - lastWave > 4.2) { waves[waveIdx * 4] = f.x; waves[waveIdx * 4 + 1] = f.y; waves[waveIdx * 4 + 2] = f.z; waves[waveIdx * 4 + 3] = simT; waveIdx = (waveIdx + 1) % 3; lastWave = simT; if (onWave) onWave(); }
+    if (f.reach < 0 ? f.t > 16 : f.t - f.reach > HUNT.press + 5) { f.on = false; f.next = simT + HUNT.gap + rnd2() * HUNT.gapMore; }
   }
 
   function step(dt) {
@@ -1908,7 +1935,7 @@
     lead.x = HOME[0] - 70; lead.y = HOME[1] - 8; lead.z = HOME[2] + 20; lead.dx = 1; lead.dy = 0; lead.dz = 0;
     for (let i = 0; i < 1300; i++) { simT += H_STEP; leadStep(H_STEP); }
     bank.fill(0); placeBirds();
-    falcon.on = false; falcon.t = 0; falcon.next = simT + 17;
+    falcon.on = false; falcon.t = 0; falcon.next = simT + 17; falcon.reach = -1;
     waves.fill(0); for (let i = 0; i < 3; i++) waves[i * 4 + 3] = -1e4; waveIdx = 0; lastWave = -1e4;
     for (let a = 0; a < 3; a++) { focus[a] = focusSm[a] = [lead.x, lead.y, lead.z][a]; focusDir[a] = a ? 0 : 1; lq[a] = 0; }
     for (let i = 0; i < 60; i++) step(1 / 60);
@@ -2026,7 +2053,10 @@
     // the evening's end: on or off (off, the flight inside goes on until Replay), how far the flock has been called down, and the share of birds still in the air
     ending: on => { if (on !== undefined) ending = !!on; return { on: ending, land: +land.toFixed(3), aloft: +aloft.toFixed(3), leader: +lead.y.toFixed(1), leave: T_LEAVE, down: [T_DOWN, T_DOWN + D_DOWN] }; },
     air: o => { if (o) { if (o.far !== undefined) air.far = +o.far; if (o.haze !== undefined) air.haze = +o.haze; } return Object.assign({}, air); },
-    falcon: () => ({ on: falcon.on, at: [falcon.x, falcon.y, falcon.z].map(v => +v.toFixed(1)), v: [falcon.vx, falcon.vy, falcon.vz].map(v => +v.toFixed(1)), fromViewer: +Math.hypot(falcon.x - here.x, falcon.y - here.y, falcon.z - here.z).toFixed(1), sinceStrike: +(simT - lastWave).toFixed(2) }),
+    falcon: o => ({ ...(o ? (Object.assign(HUNT, o), {}) : {}), hunt: Object.assign({}, HUNT), reach: +falcon.reach.toFixed(2), on: falcon.on, at: [falcon.x, falcon.y, falcon.z].map(v => +v.toFixed(1)), v: [falcon.vx, falcon.vy, falcon.vz].map(v => +v.toFixed(1)), fromViewer: +Math.hypot(falcon.x - here.x, falcon.y - here.y, falcon.z - here.z).toFixed(1), sinceStrike: +(simT - lastWave).toFixed(2), t: +falcon.t.toFixed(2), simT: +simT.toFixed(2),
+      // how far it is from where the flock is thickest and from the nearest bird, and how many birds are close enough to flee it
+      ...(() => { let nd = 1e12, c = 0; for (let i = 0; i < active; i++) { const dx = px[i] - falcon.x, dy = py[i] - falcon.y, dz = pz[i] - falcon.z, d = dx * dx + dy * dy + dz * dz; if (d < nd) nd = d; if (d < 1024) c++; }
+        return { fromCentre: +Math.hypot(falcon.x - focus[0], falcon.y - focus[1], falcon.z - focus[2]).toFixed(1), nearest: +Math.sqrt(nd).toFixed(1), within32: c, speed: +Math.hypot(falcon.vx, falcon.vy, falcon.vz).toFixed(1) }; })() }),
     // the wave a turn makes among the free birds: its speed in m/s, the time it takes to cross the bubble, and what it adds just now to the bank of the bird furthest ahead and furthest behind
     turnWave: o => { if (o && o.speed) turn.speed = +o.speed; let fa = -1, fb = -1, ma = -1e9, mb = 1e9; for (let a = 0; a < nA; a++) { const al = aD[a * 3] * here.hx + aD[a * 3 + 1] * here.hy + aD[a * 3 + 2] * here.hz; if (al > ma) { ma = al; fa = a; } if (al < mb) { mb = al; fb = a; } }
       const o1 = {}, o2 = {}; if (fa >= 0) { turnAt(fa * 3, o1); turnAt(fb * 3, o2); }
