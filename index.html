@@ -1,0 +1,2044 @@
+<!doctype html><html lang="en"><head><meta name="robots" content="noindex"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Sort Sol True to Nature</title>
+<style>@font-face{font-family:"Fraunces";src:url("assets/fonts/fraunces-italic.woff2") format("woff2");font-style:italic;font-weight:100 900;font-display:swap}</style>
+<style>
+  /* Layout: one full-bleed dusk scene. Type sits in the margins like a field note:
+     title high in the dark of the sky, caption low left, controls low right. */
+  :root {
+    --night: #070a14;
+    --ink: #f4e7d4;
+    --ink-dim: rgba(244, 231, 212, 0.66);
+    --line: rgba(244, 231, 212, 0.26);
+    --ember: #ffb478;
+    --display: 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+    --utility: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  [hidden] { display: none !important; }
+  body { background: var(--night); color: var(--ink); font-family: var(--utility); overflow: hidden; }
+
+  #sky { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .vignette { position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 85% 80% at 50% 55%, rgba(7, 10, 20, 0) 52%, rgba(7, 10, 20, 0.5) 100%); }
+  /* the edges close in while the view turns hard, which is easier on the stomach; the camera sets how far */
+  .vignette.turn { opacity: 0; background: radial-gradient(ellipse 88% 84% at 50% 52%, rgba(20, 16, 30, 0) 50%, rgba(20, 16, 30, 0.6) 100%); }
+  .veil { position: fixed; inset: 0; pointer-events: none; background: var(--night); opacity: 1; transition: opacity 2.8s ease; }
+  .veil.clear { opacity: 0; }
+  .veil.quick { transition-duration: 0.7s; }
+
+  .hud { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
+    padding-block: calc(env(safe-area-inset-top, 0px) + clamp(18px, 4vh, 44px)) calc(env(safe-area-inset-bottom, 0px) + clamp(16px, 3.2vh, 34px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .hud-inner { display: contents; }
+  .title, .foot { margin-inline: clamp(0px, 2.4vw, 34px); }
+  .title { transition: opacity 3.2s ease; }
+  .title.gone { opacity: 0; }
+  .title h1 { margin: 0; font-family: var(--display); font-style: italic; font-weight: 500; line-height: 0.92;
+    font-size: clamp(3.4rem, 11vw, 9rem); letter-spacing: -0.012em; text-wrap: balance;
+    text-shadow: 0 2px 40px rgba(7, 10, 20, 0.45); }
+  .title p { margin: 1.1em 0 0 0.35em; font-size: 0.72rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-dim); }
+
+  .foot { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 24px; }
+  .caption { margin: 0; min-width: 0; font-size: 0.7rem; line-height: 1.7; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ink-dim); transition: opacity 1.2s ease; text-shadow: 0 1px 12px rgba(7, 10, 20, 0.8); }
+  .caption.swap { opacity: 0; }
+  .notes { min-width: 0; }
+  .credit { margin: 0.55em 0 0; font-size: 0.62rem; line-height: 1.7; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ink-dim); opacity: 0.8; text-shadow: 0 1px 12px rgba(7, 10, 20, 0.8); }
+  .hint { margin: 0.55em 0 0; font-size: 0.62rem; line-height: 1.7; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ink-dim); text-shadow: 0 1px 12px rgba(7, 10, 20, 0.8); transition: opacity 1.6s ease; }
+  .hint.used { opacity: 0; }
+  .controls { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; pointer-events: auto; }
+  .controls button { font: inherit; font-size: 0.68rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink);
+    background: rgba(7, 10, 20, 0.28); border: 1px solid var(--line); border-radius: 2px; min-height: 40px; padding: 0 1.15em;
+    cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: border-color 0.25s, color 0.25s, background 0.25s; }
+  .controls button:hover { border-color: var(--ink); }
+  .chan { display: flex; align-items: center; gap: 8px; }
+  .vol { -webkit-appearance: none; appearance: none; width: 72px; height: 40px; margin: 0; padding: 0; background: transparent; cursor: pointer; }
+  .vol::-webkit-slider-runnable-track { height: 2px; background: var(--line); border-radius: 1px; }
+  .vol::-moz-range-track { height: 2px; background: var(--line); border-radius: 1px; }
+  .vol::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; margin-top: -5px; border: 0; border-radius: 50%; background: var(--ink); }
+  .vol::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: var(--ink); }
+  .chan button[aria-pressed="true"] + .vol::-webkit-slider-thumb { background: var(--ember); }
+  .chan button[aria-pressed="true"] + .vol::-moz-range-thumb { background: var(--ember); }
+  .vol:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  .vol:disabled { opacity: 0.35; cursor: default; }
+  .controls button:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+  .controls button[aria-pressed="true"] { color: var(--ember); border-color: var(--ember); }
+  .inline .hud, .inline .fallback { display: none !important; }
+  .fallback { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--ink-dim);
+    font-size: 0.8rem; letter-spacing: 0.08em; line-height: 1.8; }
+</style>
+
+<canvas id="sky" role="img" aria-label="A starling murmuration over a marsh at dusk. The view begins on the ground, rises toward the flock and ends flying inside it."></canvas>
+<div class="vignette"></div>
+<div class="vignette turn" id="turnVig"></div>
+<div class="veil" id="veil"></div>
+<div class="hud">
+  <header class="title" id="title">
+    <h1>Sort sol</h1>
+    <p>Ribemarsken &middot; flown by the field measurements</p>
+  </header>
+  <div class="foot">
+    <div class="notes">
+      <p class="caption" id="caption">Dusk &middot; watching from the dike</p>
+      <p class="hint" id="hint">Scroll to move through the evening</p>
+      <p class="credit">Created by Henrik Pultz Melbye</p>
+    </div>
+    <div class="controls">
+      <div class="chan">
+        <button id="sound" type="button" aria-pressed="false">Sound off</button>
+        <input id="soundVol" class="vol" type="range" min="0" max="100" value="60" aria-label="Sound volume">
+      </div>
+      <div class="chan">
+        <button id="music" type="button" aria-pressed="false">Music off</button>
+        <input id="musicVol" class="vol" type="range" min="0" max="100" value="60" aria-label="Music volume">
+      </div>
+      <button id="replay" type="button">Replay</button>
+    </div>
+  </div>
+</div>
+<p class="fallback" id="fallback" hidden>This animation needs WebGL 2, which this browser does not offer.</p>
+
+<script>
+(() => {
+  'use strict';
+  // ?inline: the scene sits inside a section of attabird.com that you scroll past. The page sets how far along the
+  // journey the view is (from the scroll); the scene draws no controls.
+  // &still=1 or &still=0 passes on the site's own Motion switch, which outranks the device setting.
+  const Q = new URLSearchParams(location.search), inline = Q.has('inline');
+  document.documentElement.classList.toggle('inline', inline);
+  const canvas = document.getElementById('sky');
+  const gl = canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
+  if (!gl) { document.getElementById('fallback').hidden = false; return; }
+
+  /* ---------- small helpers ---------- */
+  let seedState = 20261113;
+  const rnd = () => { seedState |= 0; seedState = seedState + 0x6D2B79F5 | 0; let t = Math.imul(seedState ^ seedState >>> 15, 1 | seedState);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  // a second generator for what differs from one viewing to the next (the falcon, which bird the camera rides);
+  // it starts somewhere new every time, and a test can fix it to get the same run twice
+  let seed2 = (Math.random() * 4294967296) | 0;
+  const rnd2 = () => { seed2 = seed2 + 0x6D2B79F5 | 0; let t = Math.imul(seed2 ^ seed2 >>> 15, 1 | seed2);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const sstep = x => { x = x < 0 ? 0 : x > 1 ? 1 : x; return x * x * x * (x * (x * 6 - 15) + 10); };
+  const mix = (a, b, t) => a + (b - a) * t;
+
+  function shader(type, src) {
+    const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s), src);
+    return s;
+  }
+  function program(vs, fs) {
+    const p = gl.createProgram();
+    gl.attachShader(p, shader(gl.VERTEX_SHADER, vs)); gl.attachShader(p, shader(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(p));
+    const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < n; i++) { const info = gl.getActiveUniform(p, i); u[info.name] = gl.getUniformLocation(p, info.name); }
+    return { p, u };
+  }
+
+  /* ---------- sky, sun, marsh ---------- */
+  const skyProg = program(`#version 300 es
+    out vec2 vNdc;
+    void main(){ vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2)); vNdc = p * 2.0 - 1.0; gl_Position = vec4(vNdc, 0.0, 1.0); }`,
+  `#version 300 es
+    precision highp float;
+    in vec2 vNdc; out vec4 o;
+    uniform vec3 uR, uU, uF, uCam, uSun;
+    uniform float uTan, uAspect, uTime, uPix;
+
+    float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+    float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y); }
+    float fbm(vec2 p){ float a = 0.5, s = 0.0; for (int i = 0; i < 5; i++){ s += a * vn(p); p = p * 2.03 + 17.1; a *= 0.5; } return s; }
+
+    // light values may exceed 1 here; they are rolled off at the end like a camera would
+    vec3 sky(vec3 d, float withClouds){
+      float h = max(d.y, 0.0);
+      float sd = max(dot(d, uSun), 0.0);
+      float az = clamp(dot(normalize(d.xz + 1e-5), normalize(uSun.xz)) * 0.5 + 0.5, 0.0, 1.0);
+      vec3 zen = vec3(0.040, 0.075, 0.170);
+      vec3 midc = mix(vec3(0.150, 0.205, 0.340), vec3(0.330, 0.320, 0.400), az);
+      vec3 hor = mix(vec3(0.400, 0.350, 0.420), vec3(1.150, 0.560, 0.210), pow(az, 2.0));
+      vec3 c = mix(zen, midc, exp(-h * 3.2));
+      c = mix(c, hor, exp(-h * 9.0));
+      c += vec3(0.80, 0.62, 0.26) * exp(-h * 16.0) * pow(az, 5.0) * 0.30;
+      c += vec3(1.0, 0.48, 0.15) * pow(sd, 8.0) * 0.40 * exp(-h * 2.5);
+      c += vec3(1.0, 0.68, 0.34) * pow(sd, 64.0) * 0.55;
+      c += vec3(1.0, 0.86, 0.62) * pow(sd, 700.0) * 1.0;
+      float ang = acos(clamp(dot(d, uSun), -1.0, 1.0));
+      c = mix(c, vec3(7.0, 4.6, 2.2), 1.0 - smoothstep(0.0095, 0.0110, ang));
+      if (withClouds > 0.5) {
+        vec2 uv = d.xz / (d.y + 0.11);
+        float n = fbm(uv * vec2(0.42, 2.3) + vec2(uTime * 0.006, 0.0));
+        float n2 = fbm(uv * vec2(1.3, 5.5) + 9.0);
+        float cl = smoothstep(0.50, 0.80, n + n2 * 0.18) * exp(-h * 2.2) * smoothstep(0.0, 0.045, d.y);
+        vec3 cc = mix(vec3(0.200, 0.200, 0.285), vec3(1.10, 0.50, 0.22), pow(az, 2.5) * exp(-h * 3.5));
+        cc += vec3(1.0, 0.55, 0.3) * pow(sd, 24.0) * 0.6;
+        c = mix(c, cc, cl * 0.80);
+        vec2 uv2 = d.xz / (d.y + 0.35);
+        float ci = smoothstep(0.55, 0.85, fbm(uv2 * vec2(1.1, 3.6) + 21.0)) * smoothstep(0.08, 0.3, d.y);
+        c = mix(c, c + vec3(0.30, 0.17, 0.15) * (0.4 + 0.6 * az), ci * 0.5);
+      }
+      return c;
+    }
+
+    void main(){
+      vec3 d = normalize(uF + uR * (vNdc.x * uAspect * uTan) + uU * (vNdc.y * uTan));
+      vec3 c;
+      if (d.y >= 0.0) {
+        c = sky(d, 1.0);
+        float a = atan(d.x, -d.z);
+        // the marsh is flat: only a low far dike closes the horizon
+        float th = 0.0009 * (1.0 - smoothstep(3.0, 45.0, uCam.y));
+        c = mix(c, vec3(0.040, 0.036, 0.045) + c * 0.08, smoothstep(th, th - 0.0005, d.y));
+      } else {
+        float t = uCam.y / (-d.y);
+        vec2 P = uCam.xz + d.xz * t;
+        float lod = clamp(t / 3500.0, 0.0, 1.0);
+        float foot = t * uPix / max(-d.y, 0.02);            // metres one pixel covers on the ground
+        float nearMask = smoothstep(13.0, 34.0, length(P));
+        vec3 horizonCol = sky(normalize(vec3(d.x, 0.0, d.z)), 0.0) * 0.88;
+
+        // water: the roost lake in front of the dike, scattered pools, and Ribe Å winding west to the sea
+        float n = fbm(P * vec2(0.0034, 0.0052) + 3.7) + 0.30 * exp(-(P.x * P.x / 270000.0 + (P.y + 260.0) * (P.y + 260.0) / 44000.0));
+        float wide = 0.012 + lod * 0.12;
+        float shore = n - 0.60;
+        float lake = smoothstep(-wide, wide, shore);
+        float rc = abs(P.x - 210.0 - 150.0 * sin(P.y * 0.0031) - 70.0 * sin(P.y * 0.0083 + 1.7) - 90.0 * (vn(vec2(P.y * 0.006, 4.0)) - 0.5)) + (vn(P * 0.09) - 0.5) * 7.0;
+        float rw = 7.5 + 3.5 * sin(P.y * 0.004 + 0.8);
+        float river = (1.0 - smoothstep(rw - foot * 0.5 - 1.0, rw + foot * 0.5 + 1.0, rc)) * clamp(2.0 * rw / foot, 0.0, 1.0);
+
+        // beyond the sea dike to the west lies the Wadden Sea: shallow water over tidal flats
+        float sea = 1.0 - smoothstep(-40.0 - foot, 40.0 + foot, P.y + 3000.0 + 260.0 * (vn(vec2(P.x * 0.0012, 9.0)) - 0.5));
+        float flats = mix(0.55, 1.0, smoothstep(0.35, 0.65, vn(P * 0.0016 + 5.0)));
+
+        // fields: long narrow strips between ditches, each row offset from the next
+        vec2 cs = vec2(64.0, 440.0);
+        vec2 cell = (mat2(0.94, 0.34, -0.34, 0.94) * P) / cs;
+        cell.x += hash(vec2(floor(cell.y), 3.0)) * 7.0;
+        vec2 id = floor(cell);
+        vec2 dl = (0.5 - abs(fract(cell) - 0.5)) * cs;
+        vec2 hw = vec2(0.9, 2.4);
+        vec2 cv = (1.0 - smoothstep(hw - foot * 0.5, hw + foot * 0.5, dl)) * clamp(2.0 * hw / foot, 0.0, 1.0);
+        float ditch = max(cv.x, cv.y) * clamp(-d.y * 5.0, 0.12, 0.8);
+        float tone = hash(id + 7.0), kind = hash(id + 31.0);
+
+        float g1 = vn(P * 0.02), g2 = vn(P * 0.31), g3 = vn(P * 3.1);
+        float fade = 1.0 - lod * 0.7;
+        vec3 grass = mix(vec3(0.040, 0.060, 0.030), vec3(0.112, 0.102, 0.056), tone * fade);      // grazed pasture to dry hay meadow
+        grass = mix(grass, vec3(0.070, 0.056, 0.040), step(0.84, kind) * fade);                   // the odd ploughed strip
+        float mown = sin(fract(cell.x) * 75.0) * step(0.55, tone) * (1.0 - smoothstep(0.8, 2.5, foot));   // swaths left by the mower
+        vec3 land = grass * (0.74 + 0.34 * g1 + 0.22 * g2 * (1.0 - lod) + 0.20 * g3 * (1.0 - smoothstep(0.0, 120.0, t)) + 0.05 * mown);
+
+        // reed beds along the shores, where the starlings come down to roost
+        float reedBand = (1.0 - smoothstep(0.0, 0.030 + wide, abs(shore + 0.016))) * (1.0 - lake);
+        reedBand = clamp(max(reedBand, (1.0 - smoothstep(rw, rw + 10.0 + foot, rc)) * (1.0 - river)), 0.0, 1.0);
+        land = mix(land, vec3(0.120, 0.090, 0.048) * (0.75 + 0.5 * g2), reedBand * 0.9);
+        land = mix(land, vec3(0.070, 0.064, 0.058), sea);                                          // wet sand of the flats
+        land += vec3(0.16, 0.075, 0.03) * pow(max(dot(normalize(d.xz), normalize(uSun.xz)), 0.0), 6.0) * 0.45;   // low sun raking across the grass
+
+        // water mirrors the sky at a low angle and goes dark when you look straight down
+        float wet = max(max(max(lake, river), ditch * (1.0 - reedBand)) * (1.0 - sea), sea * flats) * nearMask;
+        c = land;
+        if (wet > 0.003) {
+          vec2 rp = vec2(vn(P * 0.33 + uTime * 0.32), vn(P * 0.33 + 31.0 - uTime * 0.27)) - 0.5;
+          vec3 rd = normalize(vec3(d.x + rp.x * 0.07 * (1.0 - lod), -d.y + 0.002, d.z + rp.y * 0.07 * (1.0 - lod)));
+          float fres = 0.05 + 0.95 * pow(1.0 - clamp(-d.y, 0.0, 1.0), 5.0);
+          vec3 water = sky(rd, 1.0) * fres * 0.92 + vec3(0.010, 0.018, 0.026) * (1.0 - fres);
+          c = mix(land, water, wet);
+        }
+        // evening mist gathers in patches over the wet ground
+        float mist = smoothstep(0.36, 0.76, fbm(P * 0.0019 + vec2(uTime * 0.004, 11.0))) * (1.0 - exp(-t / 450.0));
+        c = mix(c, mix(vec3(0.24, 0.25, 0.31), horizonCol, 0.45), mist * 0.50);
+        c = mix(c, horizonCol, 1.0 - exp(-t / 2600.0));
+      }
+      vec3 over = max(c - 0.6, 0.0);
+      c = min(c, 0.6) + 0.4 * (1.0 - exp(-over / 0.4));
+      c += (hash(gl_FragCoord.xy + fract(uTime) * 61.0) - 0.5) * (1.6 / 255.0);
+      o = vec4(c, 1.0);
+    }`);
+
+  /* ---------- birds ---------- */
+  const birdProg = program(`#version 300 es
+    precision highp float;
+    layout(location=0) in vec3 aPos;     // right, up, forward; wingspan = 1
+    layout(location=4) in vec4 aNrmW;    // normal, wing weight (on a wing, x is the edge: 1 leading, -1 trailing)
+    layout(location=1) in vec3 iPos;
+    layout(location=2) in vec4 iVel;     // velocity, bank
+    layout(location=3) in vec4 iSeed;
+    uniform mat4 uVP; uniform vec3 uCam, uSun;
+    uniform float uTime, uSimT, uPx, uCopy, uSize, uSpread, uMinPx, uFar, uAlpha, uHaze, uStar, uStill, uShut, uFree, uAir, uLand;
+    uniform vec4 uHere, uSelf;           // the viewer: where it flies and how far inside it is; its own bird (seed now, seed before, how far changed)
+    uniform vec3 uHead; uniform vec4 uKeep;   // its heading; the room it keeps (metres to the side, metres ahead), and the bubble of free birds around it (radius, how far it has formed)
+    uniform vec4 uWave[3];
+    out float vA; out vec3 vCol;
+    void main(){
+      vec3 f0 = normalize(iVel.xyz);
+      vec3 r0 = normalize(cross(f0, vec3(0.0, 1.0, 0.0)));
+      vec3 u0 = cross(r0, f0);
+      vec3 s = fract(iSeed.xyz * (1.0 + uCopy * 1.618) + uCopy * 0.37) - 0.5;
+      float copy = min(uCopy, 1.0), shownHere = 1.0;
+      // A copy keeps its place from its parent by the compass, not by the parent's heading. So in a turn it flies the
+      // arc its parent flies, a little to one side, and does not swing round it like a spoke: measured flocks turn on
+      // equal radii, each bird on its own arc, and the birds change places as they do.
+      // When the flock comes down for the night its copies come down with it, and a bird among the reeds is not seen.
+      vec3 c = iPos + s * vec3(2.1, 1.3 * mix(1.0, clamp((iPos.y - 2.0) / 12.0, 0.0, 1.0), uLand), 2.1) * uSpread * copy;
+      vec3 dv = c - uHere.xyz;
+      // The birds nearest the viewer are not copies: they fly free, as one group with the viewer, and are drawn in a pass
+      // of their own. Over the outer two metres of their bubble they fade out and the copies fade in.
+      if (uFree > 0.5) shownHere = uKeep.w * (1.0 - smoothstep(uKeep.z - 2.0, uKeep.z, length(dv)));
+      else if (uHere.w > 0.0 && dot(dv, dv) < 256.0) {
+        // Around the viewer the copies of a bird stop being a fixed escort: each drifts a few decimetres over tens of
+        // seconds, as neighbours do in a flock that flies this well aligned.
+        vec3 q = iSeed.yzx * 6.2832 + uCopy * vec3(1.3, 2.1, 0.7);
+        vec3 d = sin(uTime * vec3(0.19, 0.13, 0.23) * (0.7 + 0.6 * fract(iSeed.w * 7.0 + uCopy * 0.31)) + q) * vec3(0.55, 0.3, 0.55);
+        c += d * copy * uHere.w * (1.0 - smoothstep(10.0, 16.0, length(dv)));
+        dv = c - uHere.xyz;
+        shownHere = 1.0 - uKeep.w * (1.0 - smoothstep(uKeep.z - 2.0, uKeep.z, length(dv)));
+        // Nobody flies through the viewer, and nobody sits dead ahead: in measured flocks the nearest neighbours are
+        // beside a bird, seldom in front of it or behind. Birds inside a spindle along the heading are moved out sideways.
+        float a = dot(dv, uHead), room = uKeep.x * max(0.0, 1.0 - a * a / (uKeep.y * uKeep.y));
+        vec3 side = dv - a * uHead; float rho = length(side);
+        if (rho < room * 2.5) {
+          side = rho > 1e-4 ? side / rho : normalize(cross(uHead, vec3(0.0, 1.0, 0.0)));
+          c += side * (room - 0.4 * rho) * uHere.w;
+        }
+      }
+      // The viewer is its own bird, and that bird's copies would hang around it for the whole flight, so none of them is drawn.
+      float mine = uHere.w * (step(abs(iSeed.x - uSelf.x), 1e-6) * uSelf.z + step(abs(iSeed.x - uSelf.y), 1e-6) * (1.0 - uSelf.z));
+      float b = iVel.w, slip = 0.0;
+      // Escape wave. When a falcon strikes, the birds nearest it roll away and back and the birds beside them follow, so a
+      // band of rolled birds (dark from the ground, since they show more wing) runs through the flock at 13 m/s. One
+      // strike sends three such pulses 0.86 s apart, each weaker than the last (measured: 2.9 pulses to a strike). A bird
+      // rolls out in a quarter of a second and back in a little more (from a model of the wave), and as it rolls it
+      // slips half a metre to that side and comes back. The birds right beside the viewer roll but keep their distance.
+      for (int i = 0; i < 3; i++) {
+        float dw = distance(c, uWave[i].xyz), pw = (uSimT - uWave[i].w) - dw / 13.0;
+        if (pw > 0.0 && pw < 3.3) {
+          float reach = exp(-dw / 110.0);
+          for (int j = 0; j < 3; j++) {
+            float pj = pw - 0.86 * float(j), amp = reach * (1.0 - 0.3 * float(j));
+            b += smoothstep(0.0, 0.25, pj) * (1.0 - smoothstep(0.25, 0.55, pj)) * 1.15 * amp;
+            slip += smoothstep(0.05, 0.45, pj) * (1.0 - smoothstep(0.45, 1.5, pj)) * amp;
+          }
+        }
+      }
+      c += r0 * slip * 0.5 * mix(1.0, smoothstep(2.0, 6.0, distance(c, uHere.xyz)), uHere.w);
+      vec3 r = r0 * cos(b) - u0 * sin(b);
+      vec3 u1 = cross(r, f0);
+      // a starling flies with its body tilted nose-up (8.8 degrees, measured in a wind tunnel at 12 m/s)
+      float nose = 0.15 * uStar;
+      vec3 f = f0 * cos(nose) + u1 * sin(nose), u = u1 * cos(nose) - f0 * sin(nose);
+      float dist = length(c - uCam);
+      float px = uPx * uSize / dist;
+      float k = max(1.0, uMinPx / px);
+      float close = (1.0 - smoothstep(14.0, 24.0, dist)) * uStar;      // near enough to read a wing
+      float still = smoothstep(1.0, 1.6, k) * uStill;                  // too small to read one, on a screen too slow to show a beat: hold the wing's average pose
+      float w = aNrmW.w, blur = 1.0;
+      vec3 lp = aPos, ln = aNrmW.xyz;
+      if (w > 0.0) {
+        float sx = sign(aPos.x);
+        float l = max(abs(aPos.x) - 0.06, 0.0), li = min(l, 0.2), lo = max(l - 0.2, 0.0);
+        // The wingbeat, by the same measurement: the tip sweeps from 55 degrees below the body to 19 above, the downstroke
+        // takes the shorter part of the beat (two fifths here), and the wing is partly folded on the way back up.
+        float rate = (62.0 + 14.0 * iSeed.w) * mix(0.42, 1.0, uStar);      // a starling's 10 to 12 beats a second; the falcon (the one bird that is not a starling) about 4
+        float p0 = uTime * rate + iSeed.x * 40.0 + uCopy * 2.1 + aNrmW.x * 0.5 * uShut * rate * close;   // the edges of a near wing: see the blur below
+        float ph = p0 - 0.35 * sin(p0), cp = cos(ph);
+        float amp = mix(mix(0.25, 1.0, smoothstep(-0.6, 0.2, sin(uTime * 0.8 + iSeed.y * 37.0 + uCopy * 1.7))), 1.0, close);
+        float t1 = (0.52 * sin(ph) - 0.31) * amp, t2 = t1 + 0.36 * sin(ph - 1.0) * amp, fold = max(cp, 0.0) * amp;
+        float rest = 0.0, shut = 0.0;
+        if (close > 0.0) {
+          // Now and then a near bird stops beating for a tenth to a third of a second: mostly a glide on spread wings,
+          // sometimes a bound with the wings shut. Seen on single starlings in wind tunnels; nobody has measured it inside a flock.
+          float slot = uTime / 1.7 + iSeed.y * 13.0 + uCopy * 0.61, sf = fract(slot);
+          float h1 = fract(sin(floor(slot) * 12.9898 + iSeed.z * 78.233 + uCopy * 3.7) * 43758.5453), h2 = fract(h1 * 97.13), h3 = fract(h1 * 931.7);
+          float len = (0.10 + 0.20 * h2) / 1.7, st = 0.05 + h3 * (0.85 - len);
+          rest = step(h1, 0.3) * smoothstep(st, st + 0.025, sf) * (1.0 - smoothstep(st + len, st + len + 0.025, sf)) * close;
+          shut = step(0.7, fract(h1 * 517.3));
+          t1 = mix(t1, mix(0.06, -0.45, shut), rest); t2 = mix(t2, mix(0.02, -0.75, shut), rest); fold = mix(fold, 1.25 * shut, rest);
+        }
+        t1 = mix(t1, -0.27, still); t2 = mix(t2, -0.32, still); fold = mix(fold, 0.3, still);
+        float arm = li * (1.0 - 0.18 * fold - 0.45 * shut * rest), wrist = 1.1 * fold, hand = lo * cos(wrist);   // the elbow draws in and the wrist bends back
+        lp.x = sx * (0.06 + arm * cos(t1) + hand * cos(t2));
+        lp.y = aPos.y + arm * sin(t1) + hand * sin(t2);
+        lp.z = aPos.z - lo * sin(wrist);
+        float tn = mix(t1, t2, step(0.2, l));
+        ln = vec3(-sx * sin(tn), cos(tn), 0.0);
+        // how far this part of the wing smears in uShut seconds, in wingspans
+        blur = l * abs(cp) * 0.52 * rate * (1.0 - 0.35 * cos(p0)) * amp * (1.0 - rest) * (1.0 - still) * uShut;
+        blur = mix(mix(1.0, 0.8, amp * step(k, 1.001)), max(0.15, 0.03 / (0.03 + blur)), close);
+      }
+      vec3 wp = c + (r * lp.x + u * lp.y + f * lp.z) * uSize * k;
+      gl_Position = shownHere <= 0.0 ? vec4(0.0, 0.0, 3.0, 1.0) : uVP * vec4(wp, 1.0);
+      vec3 N = normalize(r * ln.x + u * ln.y + f * ln.z);
+      vec3 V = uCam - wp; float lens = length(V); V /= lens;
+      // A beating wing blurs. Near the lens its leading edge is drawn a moment ahead of its trailing edge (uShut seconds
+      // apart), so the wing fills the fan it sweeps in that time, and is thinned by how far it smears: a faint fan in
+      // mid-stroke, sharp where the stroke turns. Seen flat on, a wing does not smear and stays solid.
+      blur = mix(blur, 1.0, abs(dot(N, V)) * close);
+      // a bird is shown until it is a hand's width from the lens (it used to fade out inside 1.1 m)
+      // A bird too far to fill its few pixels is drawn larger and fainter. Seen from inside the flock it is fainter by as
+      // much as it is larger in area (uFar 2), so the far flock blocks its true share of the sky and no more, and the dusk
+      // air pales a bird with distance (uAir, the share lost per metre): the neighbours dark and sharp, the far masses
+      // fading into the sky. From the dike the flock keeps its darker, drawn look (uFar 0.8), which stands in for the
+      // birds a real sort sol has and this one has not.
+      vA = pow(1.0 / k, uFar) * exp(-dist * uAir) * mix(1.0, smoothstep(2.0, 6.0, c.y), uLand) * smoothstep(0.15, 0.35, lens) * (1.0 - min(mine, 1.0)) * shownHere * uAlpha * mix(1.0, smoothstep(60.0, 230.0, dist), uHaze)
+         * mix(1.0, blur, min(w * 3.0, 1.0));
+      if (w > 0.0 && dot(N, V) < 0.0) N = -N;
+      float wing = min(w * 4.0, 1.0);
+      vec3 sunCol = vec3(1.9, 0.95, 0.42);
+      vec3 amb = mix(vec3(0.10, 0.085, 0.075), vec3(0.20, 0.25, 0.38), N.y * 0.5 + 0.5);
+      vec3 alb = mix(vec3(0.060, 0.056, 0.054), vec3(0.085, 0.070, 0.058), wing);
+      vec3 col = alb * (amb + sunCol * max(dot(N, uSun), 0.0));
+      float back = pow(max(dot(-V, uSun), 0.0), 4.0), low = smoothstep(0.02, -0.06, -V.y);
+      col += (vec3(0.34, 0.19, 0.08) * low + vec3(0.36, 0.17, 0.06) * w * (0.35 + 0.65 * low)) * back;                                       // low sun rimming the bird and shining through its feathers
+      col += vec3(0.05, 0.11, 0.09) * pow(max(dot(reflect(-uSun, N), V), 0.0), 10.0) * (1.0 - wing);            // gloss of the plumage
+      float fog = 1.0 - exp(-dist / 1700.0);
+      vCol = mix(col, vec3(0.50, 0.39, 0.36), fog * 0.5);
+    }`,
+  `#version 300 es
+    precision mediump float;
+    in float vA; in vec3 vCol; out vec4 o;
+    void main(){ if (vA < 0.004) discard; o = vec4(vCol, vA); }`);       // what cannot be seen must not hide what is behind it
+
+  /* ---------- reeds ---------- */
+  const reedProg = program(`#version 300 es
+    precision highp float;
+    layout(location=0) in vec3 aPos;
+    layout(location=1) in vec2 aSway;   // weight, phase
+    uniform mat4 uVP; uniform float uTime;
+    void main(){
+      float s = sin(uTime * 1.1 + aSway.y) + 0.4 * sin(uTime * 2.7 + aSway.y * 1.9) + 0.7;
+      vec3 p = aPos;
+      p.x += s * aSway.x; p.z += s * aSway.x * 0.35; p.y -= abs(s) * aSway.x * 0.12;
+      gl_Position = uVP * vec4(p, 1.0);
+    }`,
+  `#version 300 es
+    precision mediump float;
+    out vec4 o;
+    uniform vec3 uCol;
+    void main(){ o = vec4(uCol, 1.0); }`);
+
+  /* bird models: position (right, up, forward), normal, wing weight; wingspan = 1 */
+  function buildBird(detail, falcon) {
+    const v = [], up = [0, 1, 0];
+    const tri = (a, b, c) => { for (const q of [a, b, c]) v.push(q[0][0], q[0][1], q[0][2], q[1][0], q[1][1], q[1][2], q[2]); };
+    const ww = x => Math.max(0.001, (Math.abs(x) - 0.06) / 0.44);
+    if (detail) {
+      // body: a rounded spindle from bill to rump. The falcon's is slimmer for its span, which is two and a half starlings'.
+      const rings = falcon ? [[0.15, 0.022, 0.006], [0.08, 0.040, 0.002], [-0.02, 0.044, 0], [-0.11, 0.026, 0.003]] : [[0.215, 0.036, 0.012], [0.12, 0.066, 0.004], [-0.02, 0.074, 0], [-0.13, 0.044, 0.006]], S = 5;
+      const pt = (ring, k) => { const a = (k / S) * 6.2832 + 0.3142, nx = Math.cos(a), ny = Math.sin(a); return [[nx * ring[1], ny * ring[1] * 0.88 + ring[2], ring[0]], [nx, ny, 0], 0]; };
+      const bill = [[0, 0.008, falcon ? 0.195 : 0.30], [0, 0, 1], 0], rump = [[0, 0.004, falcon ? -0.15 : -0.19], [0, 0, -1], 0];
+      for (let k = 0; k < S; k++) {
+        tri(bill, pt(rings[0], k), pt(rings[0], k + 1));
+        for (let q = 0; q < 3; q++) { const a = pt(rings[q], k), b = pt(rings[q], k + 1), c = pt(rings[q + 1], k), d = pt(rings[q + 1], k + 1); tri(a, c, b); tri(b, c, d); }
+        tri(pt(rings[3], k), rump, pt(rings[3], k + 1));
+      }
+      // short square tail
+      const t = (x, z) => [[x, 0.004, z], up, 0];
+      if (falcon) { tri(t(-0.022, -0.12), t(-0.04, -0.27), t(0.04, -0.27)); tri(t(-0.022, -0.12), t(0.04, -0.27), t(0.022, -0.12)); }      // a longer, narrow tail
+      else { tri(t(-0.03, -0.15), t(-0.065, -0.29), t(0.065, -0.29)); tri(t(-0.03, -0.15), t(0.065, -0.29), t(0.03, -0.15)); }
+      // pointed, triangular wings, last in the list: they are drawn after every near body (see draw)
+      for (const s of [-1, 1]) {
+        // the falcon's are long and narrow, bent back at the wrist to a sharp point
+        const L = falcon ? [[0.045, 0.09], [0.20, 0.105], [0.34, 0.05], [0.44, -0.04]] : [[0.06, 0.145], [0.20, 0.145], [0.33, 0.105], [0.44, 0.03]];
+        const T = falcon ? [[0.045, -0.055], [0.18, -0.035], [0.31, -0.05], [0.42, -0.10]] : [[0.06, -0.135], [0.17, -0.135], [0.28, -0.12], [0.40, -0.095]];
+        const wv = (p, e) => [[s * p[0], 0.012, p[1]], [e, 1, 0], ww(p[0])];   // e: 1 on the leading edge, -1 on the trailing, for the blur
+        for (let q = 0; q < 3; q++) { tri(wv(L[q], 1), wv(T[q], -1), wv(L[q + 1], 1)); tri(wv(T[q], -1), wv(T[q + 1], -1), wv(L[q + 1], 1)); }
+        tri(wv(L[3], 1), wv(T[3], -1), wv(falcon ? [0.50, -0.16] : [0.50, -0.07], 0));
+      }
+    } else {
+      const b = (x, z) => [[x, 0, z], up, 0], wg = (x, z) => [[x, 0, z], up, ww(x)];
+      tri(b(0, 0.27), b(-0.075, 0.09), b(0.075, 0.09)); tri(b(-0.075, 0.09), b(-0.055, -0.15), b(0.075, 0.09));
+      tri(b(0.075, 0.09), b(-0.055, -0.15), b(0.055, -0.15)); tri(b(-0.055, -0.15), b(-0.07, -0.29), b(0.07, -0.29)); tri(b(-0.055, -0.15), b(0.07, -0.29), b(0.055, -0.15));
+      for (const s of [-1, 1]) {
+        tri(wg(s * 0.06, 0.14), wg(s * 0.06, -0.115), wg(s * 0.27, 0.115)); tri(wg(s * 0.06, -0.115), wg(s * 0.25, -0.105), wg(s * 0.27, 0.115));
+        tri(wg(s * 0.27, 0.115), wg(s * 0.25, -0.105), wg(s * 0.5, -0.07));
+      }
+    }
+    return new Float32Array(v);
+  }
+
+  /* ---------- flock state ---------- */
+  const small = Math.min(window.innerWidth, window.innerHeight) < 620 || (navigator.hardwareConcurrency || 8) <= 4;
+  const N = small ? 4000 : 7000;
+  const COPIES = small ? 12 : 20;
+  let copies = COPIES;                 // birds drawn = simulated birds x copies; lowered if the screen cannot keep up
+  let active = N;
+
+  // Values measured on real flocks (STARFLAG 3D reconstructions in Rome; Attanasi et al. 2014; Hemelrijk et al. 2019)
+  const V0 = 9.5;                       // flock speed, m/s (measured 7 to 12)
+  const S_MAX = 32;                     // the flock strings out: its tail passes a point this many seconds after its head
+  const KN = 7;                         // each bird follows its seven nearest neighbours
+  const AX = 54, AY = 19, AZ = 54;      // half-sizes of the ribbon's cross-section
+  const HOME = [0, 98, -390];           // the roost the flock keeps circling
+
+  const px = new Float32Array(N), py = new Float32Array(N), pz = new Float32Array(N);
+  const vx = new Float32Array(N), vy = new Float32Array(N), vz = new Float32Array(N);
+  const bank = new Float32Array(N), lph = new Float32Array(N);
+  const ox = new Float32Array(N), oy = new Float32Array(N), oz = new Float32Array(N), lagS = new Float32Array(N), grp = new Float32Array(N);
+  const INST = 11, inst = new Float32Array(N * INST), seeds = new Float32Array(N * 4);
+
+  const CELL = 7, INV = 1 / CELL, TAB = 1 << 14, MASK = TAB - 1, MAXC = 3;
+  const cellStart = new Int32Array(TAB + 1), cursor = new Int32Array(TAB), order = new Int32Array(N), hashOf = new Int32Array(N);
+  const kd = new Float32Array(KN), ki = new Int32Array(KN);
+
+  let simT = 0, frameNo = 0;
+  let land = 0, aloft = 1;             // the evening's end: how far the flock has been called down to the reeds (0 to 1), and the share of birds still in the air
+  // The viewer, once it flies in the flock: where it is, its heading, how far inside (0 on the dike, 1 inside), the room
+  // it keeps to the side and ahead, and its own bird (index, the one before, and how far the change has gone).
+  const here = { x: 0, y: 0, z: 0, hx: 0, hy: 0, hz: -1, w: 0, side: 0.7, ahead: 2.1, self: -1, was: -1, mix: 1, on: 1 };
+
+  /* ---------- the birds beside the viewer ----------
+     Every simulated bird is drawn many times over, and the flock's ribbon lays stretches of itself over one another,
+     so the birds drawn around the viewer stream past it at several metres a second. In a real flock the neighbours
+     hang almost still. So the nearest birds are not copies. A few hundred fly free in a bubble around the viewer, as
+     one group with it: each keeps clear of the others (never nearer than 0.38 m, the least distance measured between
+     starlings, and further from the bird ahead or behind than from the one beside), matches the seven nearest it can
+     see (not those in the quarter behind it), gives the viewer room, wanders a little, and banks into what it does.
+     They keep their places by the compass, so in a turn each flies its own arc of the same radius and the neighbours
+     swing round the viewer, as measured. Over the outer two metres of the bubble they fade out and the copies fade in. */
+  const fr = v => { v = Math.fround(v); return v - Math.floor(v); };
+  const FREE = small ? 250 : 500, RB = 7.5, RB_EDGE = 2;              // how many fly free; the bubble's radius, m; the band where they give way to the copies
+  const R_SEP = 0.8, SEP_LONG = 1.5, CORE = 0.38;                     // room a bird keeps to the side, how much more ahead and behind, and the distance nobody comes inside
+  const K_SEP = 8, K_AL = 1.0, K_CO = 0.03, K_CAR = 0.5, K_WALL = 4, K_ROOM = 14, A_FREE = 8;
+  const aD = new Float32Array(FREE * 3), aV = new Float32Array(FREE * 3), aB = new Float32Array(FREE), aSeed = new Float32Array(FREE * 4);   // where each is from the viewer, how it moves against it, its own bank
+  const GC = 2.5, GN = 8, G3 = GN * GN * GN, gStart = new Int32Array(G3 + 1), gCur = new Int32Array(G3), gOrd = new Int32Array(FREE), gCell = new Int32Array(FREE);
+  const nd = new Float32Array(KN), ni = new Int32Array(KN), give = [0, 0, 0];
+  let nA = 0, freeG = 0, freeOn = true, reseat = false, freeMs = 0, seedF = 0x2545F491;
+  // A turn does not reach every bird at once: it runs through the flock from neighbour to neighbour (measured at 20 to
+  // 40 m/s; an earlier figure was 10 to 20). So the last three quarters of a second of what the viewer's own bird did is
+  // kept, and each free bird shows it with a delay set by how far back in the bubble it flies: those ahead of the
+  // viewer bank into a turn a moment before it, those behind a moment after.
+  const TURN_N = 64, turnHist = new Float32Array(TURN_N * 4), turn = { speed: 20, head: 0, dt: 1 / 60, bird: -1, x: 0, y: 0, z: 0, b: 0 };
+  function turnAt(a3, o) {      // what free bird a adds to the group's heading and bank, from its place in the wave
+    const along = aD[a3] * here.hx + aD[a3 + 1] * here.hy + aD[a3 + 2] * here.hz, k0 = Math.min(TURN_N - 1, Math.round(RB / turn.speed / turn.dt));
+    const k = Math.max(0, Math.min(TURN_N - 1, Math.round((RB - along) / turn.speed / turn.dt)));
+    const p = ((turn.head - k) & (TURN_N - 1)) * 4, q = ((turn.head - k0) & (TURN_N - 1)) * 4;
+    o.tx = turnHist[p] - turnHist[q]; o.ty = turnHist[p + 1] - turnHist[q + 1]; o.tz = turnHist[p + 2] - turnHist[q + 2];
+    o.tb = Math.max(-0.3, Math.min(0.3, turnHist[p + 3] - turnHist[q + 3]));
+  }
+  function turnKeep(dt) {
+    const b = follow, fresh = b !== turn.bird; turn.bird = b; turn.dt = dt;
+    // what is kept is the bird's turning with its twitches smoothed away (over a tenth of a second for its heading, a quarter for its bank)
+    const kv = fresh ? 1 : 1 - Math.exp(-dt / 0.1), kb = fresh ? 1 : 1 - Math.exp(-dt / 0.25);
+    turn.x += (vx[b] - turn.x) * kv; turn.y += (vy[b] - turn.y) * kv; turn.z += (vz[b] - turn.z) * kv; turn.b += (bank[b] - turn.b) * kb;
+    for (let n = fresh ? TURN_N : 1; n > 0; n--) {      // a new bird to follow starts a new record
+      turn.head = (turn.head + 1) & (TURN_N - 1); const p = turn.head * 4;
+      turnHist[p] = turn.x; turnHist[p + 1] = turn.y; turnHist[p + 2] = turn.z; turnHist[p + 3] = turn.b;
+    }
+  }
+  const rndF = () => { seedF = seedF + 0x6D2B79F5 | 0; let t = Math.imul(seedF ^ seedF >>> 15, 1 | seedF); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
+  // Where copy c of bird i belongs, from its parent: its fixed place, and near the viewer a slow drift of its own
+  // (the same sums as in the bird shader).
+  function slotOf(i, c, t, o) {
+    const s4 = i * 4, m = 1 + c * 1.618, a0 = c * 0.37, k = c ? 1 : 0;
+    let s0 = (fr(seeds[s4] * m + a0) - 0.5) * 10.5 * k, s1 = (fr(seeds[s4 + 1] * m + a0) - 0.5) * 6.5 * k * (land > 0 ? Math.min(1, Math.max(0, (py[i] - 2) / 12)) : 1), s2 = (fr(seeds[s4 + 2] * m + a0) - 0.5) * 10.5 * k;
+    const hw = here.w * here.on;
+    if (c && hw > 0) {
+      const dx = px[i] + s0 - here.x, dy = py[i] + s1 - here.y, dz = pz[i] + s2 - here.z, d2 = dx * dx + dy * dy + dz * dz;
+      if (d2 < 256) {
+        const g = t * (0.7 + 0.6 * fr(seeds[s4 + 3] * 7 + c * 0.31)), e = Math.min(1, Math.max(0, (Math.sqrt(d2) - 10) / 6)), wt = hw * (1 - e * e * (3 - 2 * e));
+        s0 += Math.sin(g * 0.19 + seeds[s4 + 1] * 6.2832 + c * 1.3) * 0.55 * wt; s1 += Math.sin(g * 0.13 + seeds[s4 + 2] * 6.2832 + c * 2.1) * 0.3 * wt; s2 += Math.sin(g * 0.23 + seeds[s4] * 6.2832 + c * 0.7) * 0.55 * wt;
+      }
+    }
+    o.s0 = s0; o.s1 = s1; o.s2 = s2;
+  }
+  // The room the viewer keeps: a place inside the spindle along its heading is moved out sideways (o.x, o.y, o.z, in place).
+  function roomPush(o) {
+    const hw = here.w * here.on; if (hw <= 0) return;
+    const dx = o.x - here.x, dy = o.y - here.y, dz = o.z - here.z, a = dx * here.hx + dy * here.hy + dz * here.hz, room = here.side * (1 - a * a / (here.ahead * here.ahead));
+    if (room <= 0) return;
+    let qx = dx - a * here.hx, qy = dy - a * here.hy, qz = dz - a * here.hz; const rho = Math.sqrt(qx * qx + qy * qy + qz * qz);
+    if (rho >= room * 2.5) return;
+    if (rho > 1e-4) { qx /= rho; qy /= rho; qz /= rho; } else { const l = Math.hypot(here.hx, here.hz) || 1; qx = -here.hz / l; qy = 0; qz = here.hx / l; }
+    const mv = (room - 0.4 * rho) * hw; o.x += qx * mv; o.y += qy * mv; o.z += qz * mv;
+  }
+  // How much of a bird is shown at d metres from the viewer: a copy fades out inside the bubble, a free bird toward its edge.
+  function shownAt(d, free) {
+    let e = (d - (RB - RB_EDGE)) / RB_EDGE; e = e <= 0 ? 0 : e >= 1 ? 1 : e * e * (3 - 2 * e);
+    return free ? freeG * (1 - e) : 1 - freeG * (1 - e);
+  }
+  // One step of flight for the free birds, seen from the viewer: it is the middle of their bubble and they fly with it.
+  function flyFree(dt) {
+    const n = nA, GH = GN / 2, GI = 1 / GC, st = simT, hx = here.hx, hy = here.hy, hz = here.hz, hw = here.on;
+    const fOn = falcon.on, fx0 = falcon.x - here.x, fy0 = falcon.y - here.y, fz0 = falcon.z - here.z;
+    gStart.fill(0);
+    for (let a = 0; a < n; a++) {
+      let cx = Math.floor(aD[a * 3] * GI) + GH, cy = Math.floor(aD[a * 3 + 1] * GI) + GH, cz = Math.floor(aD[a * 3 + 2] * GI) + GH;
+      cx = cx < 0 ? 0 : cx >= GN ? GN - 1 : cx; cy = cy < 0 ? 0 : cy >= GN ? GN - 1 : cy; cz = cz < 0 ? 0 : cz >= GN ? GN - 1 : cz;
+      const h = (cx * GN + cy) * GN + cz; gCell[a] = h; gStart[h + 1]++;
+    }
+    for (let h = 0; h < G3; h++) gStart[h + 1] += gStart[h];
+    gCur.set(gStart.subarray(0, G3));
+    for (let a = 0; a < n; a++) gOrd[gCur[gCell[a]]++] = a;
+
+    const SEP2 = (R_SEP * SEP_LONG) * (R_SEP * SEP_LONG), LONG = 1 - 1 / (SEP_LONG * SEP_LONG), side = here.side, ahead2 = here.ahead * here.ahead, wall = RB - 0.5;
+    let gx = 0, gy = 0, gz = 0;
+    for (let a = 0; a < n; a++) {
+      const a3 = a * 3, x = aD[a3], y = aD[a3 + 1], z = aD[a3 + 2], ux = cv[0] + aV[a3], uy = cv[1] + aV[a3 + 1], uz = cv[2] + aV[a3 + 2];
+      const us = Math.sqrt(ux * ux + uy * uy + uz * uz) || 1, fx = ux / us, fy = uy / us, fz = uz / us;
+      const h = gCell[a], cx = (h / (GN * GN)) | 0, cy = ((h / GN) | 0) % GN, cz = h % GN;
+      let kc = 0, kmax = 1e9, sx = 0, sy = 0, sz = 0, bx = 0, by = 0, bz = 0;
+      for (let ring = 1; ring <= 2; ring++) {
+        kc = 0; kmax = 1e9; sx = sy = sz = bx = by = bz = 0;
+        const x0 = cx - ring < 0 ? 0 : cx - ring, x1 = cx + ring >= GN ? GN - 1 : cx + ring, y0 = cy - ring < 0 ? 0 : cy - ring, y1 = cy + ring >= GN ? GN - 1 : cy + ring, z0 = cz - ring < 0 ? 0 : cz - ring, z1 = cz + ring >= GN ? GN - 1 : cz + ring;
+        for (let gxi = x0; gxi <= x1; gxi++) for (let gyi = y0; gyi <= y1; gyi++) {
+          const row = (gxi * GN + gyi) * GN;
+          for (let q = gStart[row + z0], qe = gStart[row + z1 + 1]; q < qe; q++) {
+            const j = gOrd[q]; if (j === a) continue;
+            const j3 = j * 3, rx = aD[j3] - x, ry = aD[j3 + 1] - y, rz = aD[j3 + 2] - z, d2 = rx * rx + ry * ry + rz * rz;
+            if (d2 >= kmax && d2 >= SEP2) continue;
+            const par = rx * fx + ry * fy + rz * fz;
+            if (d2 < SEP2) {
+              const d = Math.sqrt(d2) + 1e-4, de = Math.sqrt(Math.max(0, d2 - par * par * LONG));
+              if (de < R_SEP) { const k = (1 - de / R_SEP) / d; sx -= rx * k; sy -= ry * k; sz -= rz * k; }
+              if (d < CORE + 0.12) { const k = 5 * (1 - d / (CORE + 0.12)) / d; sx -= rx * k; sy -= ry * k; sz -= rz * k; }
+              if (d < CORE) { const k = 0.5 * (CORE - d) / d; bx -= rx * k; by -= ry * k; bz -= rz * k; }
+            }
+            if (d2 < kmax && (par > 0 || par * par < 0.5 * d2)) {      // it does not see the quarter behind it
+              let p = kc < KN ? kc++ : KN - 1;
+              while (p > 0 && nd[p - 1] > d2) { nd[p] = nd[p - 1]; ni[p] = ni[p - 1]; p--; }
+              nd[p] = d2; ni[p] = j;
+              if (kc === KN) kmax = nd[KN - 1];
+            }
+          }
+        }
+        if (kc === KN && kmax <= ring * GC * ring * GC) break;      // the seven found are surely the seven nearest
+      }
+      let ax = sx * K_SEP, ay = sy * K_SEP, az = sz * K_SEP;
+      if (kc > 0) {
+        let mx = 0, my = 0, mz = 0, qx = 0, qy = 0, qz = 0;
+        for (let q = 0; q < kc; q++) { const j3 = ni[q] * 3; mx += aV[j3]; my += aV[j3 + 1]; mz += aV[j3 + 2]; qx += aD[j3] - x; qy += aD[j3 + 1] - y; qz += aD[j3 + 2] - z; }
+        const ic = 1 / kc;
+        ax += (mx * ic - aV[a3]) * K_AL + qx * ic * K_CO; ay += (my * ic - aV[a3 + 1]) * K_AL + qy * ic * K_CO; az += (mz * ic - aV[a3 + 2]) * K_AL + qz * ic * K_CO;
+      }
+      // a restlessness of its own, and the pull of the group it flies with
+      const ph = aSeed[a * 4 + 1] * 6.283, rs = 0.6 + 0.8 * aSeed[a * 4 + 2];
+      ax += 0.45 * Math.sin(st * 0.37 * rs + ph) - aV[a3] * K_CAR; ay += 0.22 * Math.sin(st * 0.47 * rs + ph * 1.7) - aV[a3 + 1] * K_CAR; az += 0.45 * Math.cos(st * 0.31 * rs + ph * 2.3) - aV[a3 + 2] * K_CAR;
+      const r = Math.sqrt(x * x + y * y + z * z);
+      if (r > wall) { const k = K_WALL * (r - wall) / r; ax -= x * k; ay -= y * k; az -= z * k; }       // the edge of the bubble turns it back
+      if (fOn) {       // a falcon within fourteen metres: away from it
+        const qx = x - fx0, qy = y - fy0, qz = z - fz0, d2 = qx * qx + qy * qy + qz * qz;
+        if (d2 < 196) { const d = Math.sqrt(d2) + 0.01, w = 1 - d / 14, k = 30 * w * w / d; ax += qx * k; ay += qy * k; az += qz * k; }
+      }
+      // room for the viewer: a spindle along its heading, which a bird steers round and never enters
+      const al = x * hx + y * hy + z * hz, room = side * (1 - al * al / ahead2) * hw;
+      let inRoom = 0, nx = 0, ny = 0, nz = 0;
+      if (room > 0) {
+        nx = x - al * hx; ny = y - al * hy; nz = z - al * hz; let rho = Math.sqrt(nx * nx + ny * ny + nz * nz);
+        if (rho < room * 1.5) {
+          if (rho > 1e-4) { nx /= rho; ny /= rho; nz /= rho; } else { const l = Math.hypot(hx, hz) || 1; nx = -hz / l; ny = 0; nz = hx / l; rho = 0; }
+          const k = K_ROOM * (1 - rho / (room * 1.5)); ax += nx * k; ay += ny * k; az += nz * k; gx -= nx * k; gy -= ny * k; gz -= nz * k;
+          inRoom = 1;
+        }
+      }
+      const am = Math.sqrt(ax * ax + ay * ay + az * az); if (am > A_FREE) { const k = A_FREE / am; ax *= k; ay *= k; az *= k; }
+      const hl = Math.sqrt(fx * fx + fz * fz) || 1;
+      aB[a] += (Math.atan((az * fx - ax * fz) / hl / 9.81) * 0.95 - aB[a]) * Math.min(1, 5 * dt);
+      let wx = aV[a3] + ax * dt, wy = aV[a3 + 1] + ay * dt, wz = aV[a3 + 2] + az * dt;
+      const wl = Math.sqrt(wx * wx + wy * wy + wz * wz); if (wl > 2.5) { const k = 2.5 / wl; wx *= k; wy *= k; wz *= k; }
+      let ox = x + wx * dt + bx, oy = y + wy * dt + by, oz = z + wz * dt + bz;
+      if (inRoom) {            // never inside the room itself
+        const a2 = ox * hx + oy * hy + oz * hz, r2 = side * (1 - a2 * a2 / ahead2) * hw;
+        if (r2 > 0) {
+          let mx = ox - a2 * hx, my = oy - a2 * hy, mz = oz - a2 * hz; const rho = Math.sqrt(mx * mx + my * my + mz * mz);
+          if (rho < r2) {
+            if (rho > 1e-4) { mx /= rho; my /= rho; mz /= rho; } else { mx = nx; my = ny; mz = nz; }
+            const mv = r2 - rho; ox += mx * mv; oy += my * mv; oz += mz * mv;
+            const vin = wx * mx + wy * my + wz * mz; if (vin < 0) { wx -= mx * vin; wy -= my * vin; wz -= mz * vin; }
+          }
+        }
+      }
+      aV[a3] = wx; aV[a3 + 1] = wy; aV[a3 + 2] = wz; aD[a3] = ox; aD[a3 + 1] = oy; aD[a3 + 2] = oz;
+    }
+    // the viewer gives way a little in return
+    const gl2 = Math.sqrt(gx * gx + gy * gy + gz * gz) * 0.25, gk = 0.25 * (gl2 > 2 ? 2 / gl2 : 1);
+    give[0] = gx * gk; give[1] = gy * gk; give[2] = gz * gk;
+  }
+  // The free birds take their places: anywhere in the bubble, none on top of another or in the viewer's room. When
+  // the viewer has jumped to another part of the flock (behind the veil) they also fly a moment unseen, so they have
+  // sorted themselves out before they show; when the bubble first forms they do that while it fades in.
+  function seatFree(settle) {
+    const R = RB - 0.4; nA = 0;
+    for (let tries = 0; nA < FREE && tries < FREE * 80; tries++) {
+      const x = (rndF() * 2 - 1) * R, y = (rndF() * 2 - 1) * R, z = (rndF() * 2 - 1) * R;
+      if (x * x + y * y + z * z > R * R) continue;
+      const al = x * here.hx + y * here.hy + z * here.hz, room = here.side * (1 - al * al / (here.ahead * here.ahead)) * 1.3;
+      if (room > 0 && x * x + y * y + z * z - al * al < room * room) continue;
+      let ok = true;
+      for (let j = 0; j < nA && ok; j++) { const dx = aD[j * 3] - x, dy = aD[j * 3 + 1] - y, dz = aD[j * 3 + 2] - z; if (dx * dx + dy * dy + dz * dz < 0.3) ok = false; }
+      if (!ok) continue;
+      const a = nA++; aD[a * 3] = x; aD[a * 3 + 1] = y; aD[a * 3 + 2] = z; aV[a * 3] = aV[a * 3 + 1] = aV[a * 3 + 2] = 0; aB[a] = 0;
+      for (let k = 0; k < 4; k++) aSeed[a * 4 + k] = rndF();
+    }
+    for (let k = 0; k < settle; k++) flyFree(1 / 60);
+  }
+  function stepNear(dt) {
+    const want = freeOn ? Math.min(1, Math.max(0, (here.w * here.on - 0.15) / 0.7)) : 0;
+    if (want <= 0 && freeG <= 0) { nA = 0; return; }           // on the dike nobody flies beside the viewer
+    const t0 = performance.now();
+    freeG += Math.max(-dt, Math.min(dt, want - freeG));
+    if (!nA || reseat) seatFree(freeG > 0.05 ? 40 : 0);
+    reseat = false;
+    flyFree(dt); turnKeep(dt);
+    freeMs += (performance.now() - t0 - freeMs) * 0.05;
+  }
+  // where free bird a is, how it moves and how it banks
+  function placeFree(a, o) {
+    const a3 = a * 3;
+    o.x = here.x + aD[a3]; o.y = here.y + aD[a3 + 1]; o.z = here.z + aD[a3 + 2];
+    turnAt(a3, o);
+    o.vx = cv[0] + aV[a3] + o.tx; o.vy = cv[1] + aV[a3 + 1] + o.ty; o.vz = cv[2] + aV[a3 + 2] + o.tz; o.bank = camBank + aB[a] + o.tb;
+    return o;
+  }
+
+  // The head of the flock: flies at flock speed, wheels about, and turns back when it strays from the roost.
+  // Its recent path is kept and the birds behind fly along it, so the flock becomes a ribbon that bulges where
+  // it turns, folds over itself into dark knots and trails a tail, as in film of real sort sol.
+  const H_STEP = 1 / 30, H_N = 2048, HM = H_N - 1, hist = new Float32Array(H_N * 3);
+  let hHead = 0, hAcc = 0;
+  const lead = { x: HOME[0] - 70, y: HOME[1] - 8, z: HOME[2] + 20, dx: 1, dy: 0, dz: 0 };
+  function leadStep(dt) {
+    const t = simT, L = lead;
+    const a = 2.6 * Math.sin(0.13 * t) + 1.7 * Math.sin(0.047 * t + 1) + 0.9 * Math.sin(0.23 * t + 2);
+    let wx = Math.cos(a), wy = 0.42 * Math.sin(0.15 * t + 0.5) * (1 - land), wz = Math.sin(a);
+    // at the evening's end the roost it circles sinks to the reed bed and draws it in closer
+    const qx = (L.x - HOME[0]) / (150 - 80 * land), qy = (L.y - (HOME[1] + (1.5 - HOME[1]) * land)) / (44 - 34 * land), qz = (L.z - HOME[2]) / (100 - 50 * land), pull = (qx * qx + qy * qy + qz * qz) * 2.6;
+    wx -= qx * pull; wy -= qy * pull; wz -= qz * pull;
+    const wl = Math.hypot(wx, wy, wz) || 1; wx /= wl; wy /= wl; wz /= wl;
+    const ang = Math.acos(Math.max(-1, Math.min(1, L.dx * wx + L.dy * wy + L.dz * wz)));
+    if (ang > 1e-4) {
+      const fr = Math.min(1, 0.55 * dt / ang), nudge = ang > 3 ? 0.02 : 0;
+      const nx = L.dx + (wx - L.dx) * fr + nudge * L.dz, ny = L.dy + (wy - L.dy) * fr, nz = L.dz + (wz - L.dz) * fr - nudge * L.dx, nl = Math.hypot(nx, ny, nz) || 1;
+      L.dx = nx / nl; L.dy = ny / nl; L.dz = nz / nl;
+    }
+    const v = V0 + 1.1 * Math.sin(0.13 * t);
+    L.x += L.dx * v * dt; L.y += L.dy * v * dt; L.z += L.dz * v * dt;
+    if (L.y < 1.5) L.y = 1.5;
+    hAcc += dt;
+    while (hAcc >= H_STEP) { hAcc -= H_STEP; hHead = (hHead + 1) & HM; hist[hHead * 3] = L.x; hist[hHead * 3 + 1] = L.y; hist[hHead * 3 + 2] = L.z; }
+  }
+  for (let i = 0; i < 1300; i++) { simT += H_STEP; leadStep(H_STEP); }
+
+  // part of the flock peels away as a second flock and later folds back in
+  const gOff = [0, 0, 0];
+  function groupOffset(t) {
+    const e = Math.max(0, Math.sin(0.043 * t + 0.6)), k = e * e;
+    gOff[0] = 130 * Math.sin(0.031 * t + 1) * k; gOff[1] = 22 * Math.sin(0.05 * t) * k; gOff[2] = 75 * Math.cos(0.027 * t) * k;
+  }
+
+  function placeBirds() {
+    const hOff = (H_STEP - hAcc) / H_STEP; groupOffset(simT);
+    for (let i = 0; i < N; i++) {
+      let a, b, c, m; do { a = rnd() * 2 - 1; b = rnd() * 2 - 1; c = rnd() * 2 - 1; m = a * a + b * b + c * c; } while (m > 1 || m < 0.01);
+      const r = Math.pow(rnd(), 0.28) / Math.sqrt(m);                // packed tighter toward the edge than the middle, as measured
+      ox[i] = a * r * AX; oy[i] = b * r * AY; oz[i] = c * r * AZ;
+      lagS[i] = S_MAX * Math.pow(rnd(), 1.4);                       // dense head, thinning tail
+      grp[i] = rnd() < 0.3 ? 1 : 0;
+      lph[i] = rnd() * 6.283;
+      const f = hOff + lagS[i] / H_STEP, i0 = f | 0, fr = f - i0, p = ((hHead - i0) & HM) * 3, q = ((hHead - i0 - 1) & HM) * 3, g = grp[i];
+      px[i] = hist[p] + (hist[q] - hist[p]) * fr + ox[i] + g * gOff[0]; py[i] = hist[p + 1] + (hist[q + 1] - hist[p + 1]) * fr + oy[i] + g * gOff[1]; pz[i] = hist[p + 2] + (hist[q + 2] - hist[p + 2]) * fr + oz[i] + g * gOff[2];
+      vx[i] = (hist[p] - hist[q]) * 30; vy[i] = (hist[p + 1] - hist[q + 1]) * 30; vz[i] = (hist[p + 2] - hist[q + 2]) * 30;
+      seeds[i * 4] = rnd(); seeds[i * 4 + 1] = rnd(); seeds[i * 4 + 2] = rnd(); seeds[i * 4 + 3] = rnd();
+    }
+  }
+  placeBirds();
+
+  const focus = [lead.x, lead.y, lead.z], focusSm = [lead.x, lead.y, lead.z], focusDir = [1, 0, 0];
+  const falcon = { on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 1, t: 0, next: simT + 17 };
+  const waves = new Float32Array(12); for (let i = 0; i < 3; i++) waves[i * 4 + 3] = -1e4;
+  let waveIdx = 0, lastWave = -1e4, onWave = null;
+
+  function updateFalcon(dt) {
+    const f = falcon, SP = 30;
+    if (!f.on) {
+      if (simT > f.next && land <= 0) {      // no falcon comes once the flock is going down
+        const a = rnd2() * 6.283;
+        f.x = focus[0] + Math.cos(a) * 190; f.y = focus[1] + 35 + rnd2() * 45; f.z = focus[2] + Math.sin(a) * 190;
+        const dx = focus[0] - f.x, dy = focus[1] - f.y, dz = focus[2] - f.z, l = Math.hypot(dx, dy, dz);
+        f.vx = dx / l * SP; f.vy = dy / l * SP; f.vz = dz / l * SP; f.on = true; f.t = 0;
+      }
+      return;
+    }
+    f.t += dt;
+    const dx = focus[0] - f.x, dy = focus[1] - f.y, dz = focus[2] - f.z, l = Math.hypot(dx, dy, dz) || 1;
+    if (f.t < 5.5) { const k = 1.6 * dt; f.vx += (dx / l * SP - f.vx) * k; f.vy += (dy / l * SP - f.vy) * k; f.vz += (dz / l * SP - f.vz) * k; }
+    f.x += f.vx * dt; f.y += f.vy * dt; f.z += f.vz * dt;
+    if (f.y < 14) { f.y = 14; f.vy = Math.abs(f.vy) * 0.3; }
+    // the birds nearest the falcon start an escape wave that runs through the flock
+    if (l < 85 && simT - lastWave > 4.2) { waves[waveIdx * 4] = f.x; waves[waveIdx * 4 + 1] = f.y; waves[waveIdx * 4 + 2] = f.z; waves[waveIdx * 4 + 3] = simT; waveIdx = (waveIdx + 1) % 3; lastWave = simT; if (onWave) onWave(); }
+    if (f.t > 12) { f.on = false; f.next = simT + 16 + rnd2() * 12; }
+  }
+
+  function step(dt) {
+    const n = active;
+    simT += dt; frameNo++;
+    leadStep(dt); updateFalcon(dt);
+    cellStart.fill(0);
+    for (let i = 0; i < n; i++) {
+      const h = (Math.imul(Math.floor(px[i] * INV), 73856093) ^ Math.imul(Math.floor(py[i] * INV), 19349663) ^ Math.imul(Math.floor(pz[i] * INV), 83492791)) & MASK;
+      hashOf[i] = h; cellStart[h + 1]++;
+    }
+    for (let h = 0; h < TAB; h++) cellStart[h + 1] += cellStart[h];
+    cursor.set(cellStart.subarray(0, TAB));
+    for (let i = 0; i < n; i++) order[cursor[hashOf[i]]++] = i;
+
+    const R2 = CELL * CELL, RS = 2.3, RS2 = RS * RS;
+    const lagK = 1 / H_STEP, hOff = (H_STEP - hAcc) / H_STEP; groupOffset(simT);
+    const gx0 = gOff[0] * (1 - land), gy0 = gOff[1] * (1 - land), gz0 = gOff[2] * (1 - land), floor = 20 - 19 * land;
+    const fOn = falcon.on, fx = falcon.x, fy = falcon.y, fz = falcon.z;
+    const st = simT, hw = here.w * here.on;
+
+    for (let i = 0; i < n; i++) {
+      const x = px[i], y = py[i], z = pz[i];
+      let ux = vx[i], uy = vy[i], uz = vz[i];
+      const cx = Math.floor(x * INV), cy = Math.floor(y * INV), cz = Math.floor(z * INV);
+      let kc = 0, kmax = R2, sx = 0, sy = 0, sz = 0;
+      for (let dz = -1; dz <= 1; dz++) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const h = (Math.imul(cx + dx, 73856093) ^ Math.imul(cy + dy, 19349663) ^ Math.imul(cz + dz, 83492791)) & MASK;
+        const s = cellStart[h], c = cellStart[h + 1] - s;
+        if (c === 0) continue;
+        const lim = c < MAXC ? c : MAXC, off = c > MAXC ? (i + frameNo) % c : 0;
+        for (let k = 0; k < lim; k++) {
+          let q = off + k; if (q >= c) q -= c;
+          const j = order[s + q]; if (j === i) continue;
+          const rx = px[j] - x, ry = py[j] - y, rz = pz[j] - z, d2 = rx * rx + ry * ry + rz * rz;
+          if (d2 < 1e-6 || (d2 >= kmax && d2 >= RS2)) continue;
+          if (d2 < RS2) { const d = Math.sqrt(d2), w = (1 - d / RS) / d; sx -= rx * w; sy -= ry * w; sz -= rz * w; }
+          if (d2 < kmax) {                      // keep only the seven nearest
+            let p = kc < KN ? kc++ : KN - 1;
+            while (p > 0 && kd[p - 1] > d2) { kd[p] = kd[p - 1]; ki[p] = ki[p - 1]; p--; }
+            kd[p] = d2; ki[p] = j;
+            if (kc === KN) kmax = kd[KN - 1];
+          }
+        }
+      }
+      let ax = sx * 18, ay = sy * 18, az = sz * 18;
+      if (kc > 0) {
+        let avx = 0, avy = 0, avz = 0, apx = 0, apy = 0, apz = 0;
+        for (let q = 0; q < kc; q++) { const j = ki[q]; avx += vx[j]; avy += vy[j]; avz += vz[j]; apx += px[j] - x; apy += py[j] - y; apz += pz[j] - z; }
+        const ic = 1 / kc;
+        ax += (avx * ic - ux) * 1.2 + apx * ic * 0.25;
+        ay += (avy * ic - uy) * 1.2 + apy * ic * 0.25;
+        az += (avz * ic - uz) * 1.2 + apz * ic * 0.25;
+      }
+      // the bird's place in the ribbon: the path the head flew, this bird's time behind it, and its place across
+      const f = hOff + lagS[i] * lagK, i0 = f | 0, fr = f - i0, p = ((hHead - i0) & HM) * 3, q = ((hHead - i0 - 1) & HM) * 3, g = grp[i];
+      // where the path it follows comes down to the reeds, the ribbon flattens and sinks into them
+      const hyL = hist[p + 1] + (hist[q + 1] - hist[p + 1]) * fr, flat = hyL >= 33 ? 1 : hyL <= 3 ? 0 : (hyL - 3) / 30;
+      const ddx = hist[p] + (hist[q] - hist[p]) * fr + ox[i] + g * gx0 - x, ddy = hyL + (oy[i] + g * gy0) * flat - y, ddz = hist[p + 2] + (hist[q + 2] - hist[p + 2]) * fr + oz[i] + g * gz0 - z;
+      const dist = Math.sqrt(ddx * ddx + ddy * ddy + ddz * ddz);
+      ax += ddx * 0.22 + ((hist[p] - hist[q]) * 30 - ux) * 0.9;
+      ay += ddy * 0.30 + ((hist[p + 1] - hist[q + 1]) * 30 - uy) * 0.9;
+      az += ddz * 0.22 + ((hist[p + 2] - hist[q + 2]) * 30 - uz) * 0.9;
+      // small individual restlessness
+      const ph = lph[i];
+      ax += 0.8 * Math.sin(st * 0.9 + ph); ay += 0.5 * Math.sin(st * 1.1 + ph * 2.3); az += 0.8 * Math.cos(st * 0.7 + ph * 1.7);
+      if (fOn) {
+        const rx = x - fx, ry = y - fy, rz = z - fz, d2 = rx * rx + ry * ry + rz * rz;
+        if (d2 < 1024) { const d = Math.sqrt(d2) + 0.01, w = (1 - d / 32); const k = 34 * w * w / d; ax += rx * k; ay += ry * k; az += rz * k; }
+      }
+      if (hw > 0 && i !== here.self) {       // make room for the viewer, as for any neighbour
+        const rx = x - here.x, ry = y - here.y, rz = z - here.z, d2 = rx * rx + ry * ry + rz * rz;
+        if (d2 < 2.25) { const d = Math.sqrt(d2) + 0.01, k = 20 * (1 - d / 1.5) * hw / d; ax += rx * k; ay += ry * k; az += rz * k; }
+      }
+      if (y < floor) ay += (floor - y) * 1.4;
+      const al = Math.sqrt(ax * ax + ay * ay + az * az);
+      if (al > 15) { const k = 15 / al; ax *= k; ay *= k; az *= k; }
+      const hl = Math.sqrt(ux * ux + uz * uz) || 1;
+      const lat = (az * ux - ax * uz) / hl;
+      bank[i] += (Math.atan(lat / 9.81) * 0.95 - bank[i]) * Math.min(1, 5 * dt);
+      ux += ax * dt; uy += ay * dt; uz += az * dt;
+      const sp = Math.sqrt(ux * ux + uy * uy + uz * uz) || 1;
+      const want = V0 + Math.min(2.5, dist * 0.1);
+      let ns = sp + (want - sp) * Math.min(1, 1.5 * dt);
+      if (ns < 7) ns = 7; else if (ns > 12.5) ns = 12.5;
+      const k = ns / sp; ux *= k; uy *= k; uz *= k;
+      vx[i] = ux; vy[i] = uy; vz[i] = uz;
+      px[i] = x + ux * dt; py[i] = y + uy * dt; pz[i] = z + uz * dt;
+    }
+    stepNear(dt);
+  }
+
+  function updateFocus(dt) {
+    const n = active; let sx = 0, sy = 0, sz = 0, c = 0, gx = 0, gy = 0, gz = 0, gc = 0, hx = 0, hy = 0, hz = 0;
+    const fx = focus[0], fy = focus[1], fz = focus[2];
+    let up = 0;
+    for (let i = 0; i < n; i += 3) {
+      const x = px[i], y = py[i], z = pz[i]; gx += x; gy += y; gz += z; gc++; if (y > 3.5) up++;
+      const dx = x - fx, dy = y - fy, dz = z - fz;
+      if (dx * dx + dy * dy + dz * dz < 4900) { sx += x; sy += y; sz += z; c++; hx += vx[i]; hy += vy[i]; hz += vz[i]; }
+    }
+    aloft = gc ? up / gc : 1;
+    if (c > gc * 0.06) { focus[0] = sx / c; focus[1] = sy / c; focus[2] = sz / c; }
+    else { focus[0] = gx / gc; focus[1] = gy / gc; focus[2] = gz / gc; }
+    const hl = Math.hypot(hx, hy, hz); if (hl > 1e-3) { focusDir[0] = hx / hl; focusDir[1] = hy / hl; focusDir[2] = hz / hl; }
+    const k = 1 - Math.exp(-dt * 1.2);
+    for (let a = 0; a < 3; a++) focusSm[a] += (focus[a] - focusSm[a]) * k;
+  }
+
+  for (let i = 0; i < 60; i++) step(1 / 60);
+  updateFocus(1); updateFocus(1); focusSm[0] = focus[0]; focusSm[1] = focus[1]; focusSm[2] = focus[2];
+
+  /* ---------- GPU buffers ---------- */
+  const nearMesh = buildBird(true), farMesh = buildBird(false), nearVerts = nearMesh.length / 7, farVerts = farMesh.length / 7;
+  const WING_VERTS = 42, bodyVerts = nearVerts - WING_VERTS;   // the near model: body and tail first, then the two wings
+  const staticBuf = data => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW); return b; };
+  const nearBuf = staticBuf(nearMesh), farBuf = staticBuf(farMesh);
+  const instBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, instBuf); gl.bufferData(gl.ARRAY_BUFFER, inst.byteLength, gl.DYNAMIC_DRAW);
+  function instPointers(base) {
+    gl.vertexAttribPointer(1, 3, gl.FLOAT, false, INST * 4, base);
+    gl.vertexAttribPointer(2, 4, gl.FLOAT, false, INST * 4, base + 12);
+    gl.vertexAttribPointer(3, 4, gl.FLOAT, false, INST * 4, base + 28);
+  }
+  function birdVao(mb, ib) {
+    const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, mb);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 28, 0);
+    gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4, 4, gl.FLOAT, false, 28, 12);
+    gl.bindBuffer(gl.ARRAY_BUFFER, ib);
+    for (const a of [1, 2, 3]) { gl.enableVertexAttribArray(a); gl.vertexAttribDivisor(a, 1); }
+    instPointers(0);
+    return vao;
+  }
+  const nearVao = birdVao(nearBuf, instBuf), farVao = birdVao(farBuf, instBuf);
+  const fInst = new Float32Array(FREE * INST), fOut = {};      // the free birds
+  const freeBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, freeBuf); gl.bufferData(gl.ARRAY_BUFFER, fInst.byteLength, gl.DYNAMIC_DRAW);
+  const freeVao = birdVao(nearBuf, freeBuf);
+  const falconInst = new Float32Array(INST); falconInst.set([0.3, 0.9, 0.5, 0.0], 7);
+  const falconBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, falconBuf); gl.bufferData(gl.ARRAY_BUFFER, falconInst, gl.DYNAMIC_DRAW);
+  const falconMesh = buildBird(true, true), falconVerts = falconMesh.length / 7, falconVao = birdVao(staticBuf(falconMesh), falconBuf);
+  const emptyVao = gl.createVertexArray();
+
+  /* reeds (tagrør) on the dike in front of the viewer */
+  const reedData = [];
+  {
+    const strip = (pts, widths, z, H, phase) => {
+      const v = [];
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
+        let tx = b[0] - a[0], ty = b[1] - a[1]; const l = Math.hypot(tx, ty) || 1; tx /= l; ty /= l;
+        const nx = -ty * widths[i] * 0.5, ny = tx * widths[i] * 0.5;
+        v.push([pts[i][0] - nx, pts[i][1] - ny], [pts[i][0] + nx, pts[i][1] + ny]);
+      }
+      const put = p => { const f = Math.max(0, p[1] / H); reedData.push(p[0], p[1], z, f * f * H * 0.085, phase); };
+      for (let i = 0; i < pts.length - 1; i++) { const a = v[i * 2], b = v[i * 2 + 1], c = v[i * 2 + 2], d = v[i * 2 + 3]; put(a); put(b); put(c); put(b); put(d); put(c); }
+    };
+    for (let i = 0; i < 700; i++) {
+      const x = (rnd() * 2 - 1) * 15, z = -1.5 - rnd() * rnd() * 10;
+      const edge = Math.min(1, Math.abs(x) / 8);
+      const H = (0.75 + rnd() * 0.75) * (0.85 + 1.35 * edge * edge) * (1 + (-z - 1.5) * 0.05);
+      const lean = (rnd() - 0.35) * 0.3, phase = x * 0.3 + rnd() * 1.4;
+      const stem = [], sw = [];
+      for (let k = 0; k <= 6; k++) { const t = k / 6; stem.push([x + lean * t * t * H * 0.3, t * H]); sw.push(mix(0.017, 0.006, t)); }
+      strip(stem, sw, z, H, phase);
+      const leaves = 2 + Math.floor(rnd() * 3);
+      for (let j = 0; j < leaves; j++) {
+        const t = 0.25 + rnd() * 0.6, side = rnd() < 0.5 ? -1 : 1, L = 0.3 + rnd() * 0.4;
+        const bx = x + lean * t * t * H * 0.3, by = t * H, lp = [], lw = [];
+        for (let k = 0; k <= 4; k++) { const q = k / 4; lp.push([bx + side * L * q, by + L * (0.75 * q - 0.75 * q * q)]); lw.push(0.017 * (1 - q * 0.96)); }
+        strip(lp, lw, z, H, phase);
+      }
+      const tx = x + lean * H * 0.3, pd = lean >= 0 ? 1 : -1, pl = 0.2 + rnd() * 0.16;
+      const pp = [], pw = [0.006, 0.030, 0.040, 0.026, 0.004];
+      for (let k = 0; k <= 4; k++) { const q = k / 4; pp.push([tx + pd * pl * 0.55 * q * q, H + pl * q * (1 - 0.35 * q)]); }
+      strip(pp, pw, z, H * 1.15, phase);
+    }
+  }
+  const reedVerts = reedData.length / 5;
+  const reedVao = gl.createVertexArray(); gl.bindVertexArray(reedVao);
+  const reedBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, reedBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(reedData), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 20, 0);
+  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 12);
+  gl.bindVertexArray(null);
+
+  /* Ribe on the eastern horizon, behind the watcher: the cathedral above a low line of roofs and trees */
+  const townData = []; let townDark = 0;
+  {
+    const CX = -120, Z = 1150;
+    const put = (x, y) => townData.push(CX + x, y, Z, 0, 0);
+    const tri = (a, b, c) => { put(a[0], a[1]); put(b[0], b[1]); put(c[0], c[1]); };
+    const box = (x0, x1, y0, y1) => { tri([x0, y0], [x1, y0], [x1, y1]); tri([x0, y0], [x1, y1], [x0, y1]); };
+    let x = -430;
+    while (x < 430) {
+      const w = 9 + rnd() * 12, h = (5 + rnd() * 5) * (0.5 + 0.5 * (1 - Math.pow(Math.abs(x) / 430, 2)));
+      box(x, x + w, 0, h);
+      if (rnd() < 0.3) {              // a tree crown
+        const r = w * 0.55, cx = x + w / 2, cy = h + r * 0.5;
+        for (let k = 0; k < 6; k++) { const a = k / 6 * 6.2832, b = (k + 1) / 6 * 6.2832; tri([cx, cy], [cx + Math.cos(a) * r, cy + Math.sin(a) * r], [cx + Math.cos(b) * r, cy + Math.sin(b) * r]); }
+      } else tri([x, h], [x + w, h], [x + w / 2, h + w * 0.42]);   // a gabled roof
+      x += w * 0.9;
+    }
+    // the cathedral seen from the west: north is to the left
+    box(-30, 30, 0, 19);                                          // transepts and aisles
+    box(-15, 15, 0, 22); tri([-15, 22], [15, 22], [0, 31]);       // west gable of the nave
+    tri([-1.6, 27], [1.6, 27], [0, 43]);                          // ridge turret
+    box(6, 20, 0, 50); box(12.7, 13.3, 50, 58);                   // Borgertårnet: square, flat-topped, with its flagpole
+    box(-19, -8, 0, 33); tri([-19, 33], [-8, 33], [-13.5, 48]);   // Mariatårnet with its pointed spire
+    townDark = townData.length / 5;
+    for (let i = 0; i < 26; i++) { const lx = (rnd() * 2 - 1) * 380, ly = 2 + rnd() * 5; box(lx, lx + 2.6, ly, ly + 2.2); }   // a few lit windows
+  }
+  const townVerts = townData.length / 5;
+  const townVao = gl.createVertexArray(); gl.bindVertexArray(townVao);
+  const townBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, townBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(townData), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 20, 0);
+  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 12);
+  gl.bindVertexArray(null);
+
+  /* ---------- camera ---------- */
+  const SUN = (() => { const v = [0.25, 0.105, -1], l = Math.hypot(...v); return v.map(a => a / l); })();
+  let tl = 0;                       // seconds along the journey
+  const T_RISE = 11, D_RISE = 27, T_MERGE = 38, D_MERGE = 15;
+  // The evening ends as it does in the marsh: when the light goes the flock drops into the reeds for the night. After a
+  // good minute inside, the view leaves the flock the way it came, back to the dike, and from there the flock is seen
+  // pouring down: the birds follow their leader's path, so the head of the ribbon goes down first and the tail half a
+  // minute later. Nobody has measured that descent; this is how it is told from the ground. (Riding it down inside the
+  // flock would be the least comfortable motion of the whole evening, which is why the view takes the dike.)
+  const T_LEAVE = 118, D_LEAVE = 14, T_SINK = 124, D_SINK = 30, T_DOWN = 124, D_DOWN = 34;
+  let ending = true;
+  const insideAt = t => sstep((t - T_MERGE) / D_MERGE) * (ending ? 1 - sstep((t - T_LEAVE) / D_LEAVE) : 1);
+  const aloftAt = t => sstep((t - T_RISE) / D_RISE) * (ending ? 1 - sstep((t - T_SINK) / D_SINK) : 1);
+  const cam = { eye: [0, 1.7, 0], r: [1, 0, 0], u: [0, 1, 0], f: [0, 0, -1], fov: 38 };
+  let follow = 0, strayT = 0, lowT = 0, roll = 0, turnRate = 0, turnDir = 0;
+  // read by the test hooks: birds around the eye, how fast the eye moves, how often it changes bird, and the peaks inside the flock
+  let near50 = 0, near30 = 0, eyeSp = 0, eyeCut = true, repicks = 0;
+  const peak = { roll: 0, eye: 0, turn: 0 }, eyeWas = [0, 1.7, 0];
+  // calm: the gentler flight, for people who have asked their device for less motion
+  let calm = false, jumpT = 0, graceT = 0, jumps = 0, lookLead = 0, shade = 0, shadeShown = 0;
+  const turnVig = document.getElementById('turnVig');
+  const pF = [0, 0, -1];
+  const lq = [0, 0, 0];
+  const cp = [0, 80, -400], cf = [0, 0, -1], cv = [0, 0, -9.5], gave = [0, 0, 0];
+  let camBank = 0;
+  // The view follows the mouse a little, as a turn of the head: up to 9 degrees to the side and 6 up or down, eased.
+  // When the mouse has rested a few seconds the view goes back to its own gaze. (Not inline, where the sky ignores the pointer.)
+  const gaze = { tx: 0, ty: 0, x: 0, y: 0, on: 0, at: -1e9 };
+  if (!inline) {
+    addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse') return;
+      gaze.tx = Math.max(-1, Math.min(1, e.clientX / (innerWidth || 1) * 2 - 1)); gaze.ty = Math.max(-1, Math.min(1, 1 - e.clientY / (innerHeight || 1) * 2)); gaze.at = performance.now();
+    });
+    document.documentElement.addEventListener('mouseleave', () => { gaze.at = -1e9; });
+  }
+  // Which bird the camera rides: one a little behind and below where the flock is thickest. Once the camera is
+  // flying (nearEye) a bird close to it counts for more, so it need not travel far to change bird.
+  function pickFollow(nearEye) {
+    let best = 0, bd = 1e12;
+    for (let k = 0; k < 500; k++) {
+      const i = Math.floor(rnd2() * active);
+      const dx = px[i] - focus[0] + focusDir[0] * 20, dy = py[i] - focus[1] + focusDir[1] * 20 + 4, dz = pz[i] - focus[2] + focusDir[2] * 20; let d = dx * dx + dy * dy * 3 + dz * dz;
+      if (nearEye) { const ax = px[i] - cp[0], ay = py[i] - cp[1], az = pz[i] - cp[2]; d += 0.6 * (ax * ax + ay * ay + az * az); }
+      if (d < bd) { bd = d; best = i; }
+    }
+    follow = best; strayT = 0; lowT = 0;
+  }
+  function snapChase() {
+    const b = follow, sp = Math.hypot(vx[b], vy[b], vz[b]) || 1;
+    cf[0] = vx[b] / sp; cf[1] = vy[b] / sp; cf[2] = vz[b] / sp;
+    cp[0] = px[b] + cf[0] * 0.4; cp[1] = py[b] + 0.06; cp[2] = pz[b] + cf[2] * 0.4; roll = 0; lookLead = 0;
+    cv[0] = vx[b]; cv[1] = vy[b]; cv[2] = vz[b]; camBank = bank[b]; gave[0] = gave[1] = gave[2] = 0; reseat = true;
+    pF[0] = cf[0]; pF[1] = cf[1]; pF[2] = cf[2]; eyeCut = true;
+  }
+  function resetChase() { pickFollow(false); snapChase(); jumpT = 0; graceT = 0; }
+  resetChase();
+
+  function updateCamera(dt) {
+    if (follow >= active) pickFollow(true);
+    const b = follow;
+    if (dt > 0) {
+      // The viewer flies as one of the birds. It holds a place just ahead of its own bird, as loosely as any bird holds
+      // its place in the flock; it gives way a little to the birds beside it; and it cannot pull as hard as they can
+      // (8 m/s² where they manage 15, half that in the calm flight), so its own manoeuvres stay gentle whatever the
+      // flock does. Closing on its bird it gains at most 6 m/s on it, so it never flies faster than a starling can
+      // (measured up to 19 m/s).
+      const lim = calm ? 4 : 8, gk = 1 - Math.exp(-dt / 0.3), s0 = insideAt(tl);
+      for (let a = 0; a < 3; a++) gave[a] += (give[a] * s0 - gave[a]) * gk;
+      let ax = (px[b] + cf[0] * 0.4 - cp[0]) * 2.56 + (vx[b] - cv[0]) * 4 + gave[0];
+      let ay = (py[b] + 0.06 + cf[1] * 0.4 - cp[1]) * 2.56 + (vy[b] - cv[1]) * 4 + gave[1];
+      let az = (pz[b] + cf[2] * 0.4 - cp[2]) * 2.56 + (vz[b] - cv[2]) * 4 + gave[2];
+      const al = Math.hypot(ax, ay, az); if (al > lim) { const k = lim / al; ax *= k; ay *= k; az *= k; }
+      cv[0] += ax * dt; cv[1] += ay * dt; cv[2] += az * dt;
+      const rx = cv[0] - vx[b], ry = cv[1] - vy[b], rz = cv[2] - vz[b], rl = Math.hypot(rx, ry, rz), cap = calm ? 3 : 6;
+      if (rl > cap) { const k = cap / rl; cv[0] = vx[b] + rx * k; cv[1] = vy[b] + ry * k; cv[2] = vz[b] + rz * k; }
+      cp[0] += cv[0] * dt; cp[1] += cv[1] * dt; cp[2] += cv[2] * dt;
+      if (cp[1] < 3) cp[1] = 3;
+      const hl = Math.hypot(cv[0], cv[2]) || 1;      // it banks into its own turns, as the birds do
+      camBank += (Math.atan((az * cv[0] - ax * cv[2]) / hl / 9.81) * 0.95 - camBank) * Math.min(1, 5 * dt);
+    }
+    const sp = Math.hypot(cv[0], cv[1], cv[2]) || 1;
+    const kf = 1 - Math.exp(-dt * (calm ? 1.2 : 2.4));
+    cf[0] += (cv[0] / sp - cf[0]) * kf; cf[1] += (cv[1] / sp - cf[1]) * kf; cf[2] += (cv[2] / sp - cf[2]) * kf;
+    let cl = Math.hypot(cf[0], cf[1], cf[2]) || 1; cf[0] /= cl; cf[1] /= cl; cf[2] /= cl;
+    if (calm && dt > 0) {      // in the calm flight the head never turns faster than about 34 degrees a second
+      const ang = Math.acos(Math.max(-1, Math.min(1, pF[0] * cf[0] + pF[1] * cf[1] + pF[2] * cf[2]))), lim = 0.6 * dt;
+      if (ang > lim) {
+        const k = lim / ang; cf[0] = pF[0] + (cf[0] - pF[0]) * k; cf[1] = pF[1] + (cf[1] - pF[1]) * k; cf[2] = pF[2] + (cf[2] - pF[2]) * k;
+        cl = Math.hypot(cf[0], cf[1], cf[2]) || 1; cf[0] /= cl; cf[1] /= cl; cf[2] /= cl;
+      }
+    }
+    if (dt > 0) {      // turn rate in radians a second, and its side: +1 right, -1 left
+      const dd = Math.max(-1, Math.min(1, pF[0] * cf[0] + pF[1] * cf[1] + pF[2] * cf[2])), kt = 1 - Math.exp(-dt * 3);
+      turnRate += (Math.acos(dd) / dt - turnRate) * kt;
+      turnDir += (Math.max(-1, Math.min(1, -(pF[2] * cf[0] - pF[0] * cf[2]) / dt * 2.5)) - turnDir) * kt;
+    }
+    pF[0] = cf[0]; pF[1] = cf[1]; pF[2] = cf[2];
+    // The horizon stays nearly level. A flying bird holds its head steady while its body rolls into the turn (measured
+    // in pigeons and lovebirds), so the view takes a fifth of the bank, 12 degrees at most, and none in the calm flight.
+    roll += ((calm ? 0 : Math.max(-0.21, Math.min(0.21, camBank * 0.2))) - roll) * (1 - Math.exp(-dt * 2));
+    const fdx = px[b] - focus[0], fdy = py[b] - focus[1], fdz = pz[b] - focus[2];
+    strayT = (fdx * fdx + fdy * fdy + fdz * fdz > 85 * 85) ? strayT + dt : 0;
+    // where the birds are thickest around the camera; the gaze leans that way
+    let qx = 0, qy = 0, qz = 0, qc = 0, close = 0;
+    for (let i = 0; i < active; i += 2) {
+      const dx = px[i] - cp[0], dy = py[i] - cp[1], dz = pz[i] - cp[2], d2 = dx * dx + dy * dy + dz * dz;
+      if (d2 < 2500) { qx += dx; qy += dy; qz += dz; qc++; if (d2 < 900) close++; }
+    }
+    if (qc > 8) { qx /= qc; qy /= qc; qz /= qc; } else { qx = focus[0] - cp[0]; qy = focus[1] - cp[1]; qz = focus[2] - cp[2]; }
+    const kq = 1 - Math.exp(-dt * 1.4);
+    lq[0] += (qx - lq[0]) * kq; lq[1] += (qy - lq[1]) * kq; lq[2] += (qz - lq[2]) * kq;
+    near50 = qc * 2; near30 = close * 2;
+    lowT = close * 2 < active * 0.03 ? lowT + dt : 0;
+    const u = aloftAt(tl), s = insideAt(tl), ul = sstep((tl - 6) / 17);
+    land = ending ? sstep((tl - T_DOWN) / D_DOWN) : 0;
+    // When its bird strays from the flock the camera changes bird. A near one it glides to; a far one it reaches
+    // through a short fade, since crossing that distance in view would mean flying faster than any starling.
+    if (graceT > 0) graceT -= dt;
+    if (jumpT > 0) {
+      jumpT -= dt;
+      if (jumpT <= 0) { pickFollow(false); snapChase(); veil.classList.add('clear'); }
+    } else if ((strayT > 1.6 || lowT > 1.4) && graceT <= 0) {
+      repicks++; pickFollow(true);
+      const nb = follow, jx = px[nb] - cp[0], jy = py[nb] - cp[1], jz = pz[nb] - cp[2], reach = calm ? 12 : 30;
+      if (s <= 0) snapChase();
+      else if (jx * jx + jy * jy + jz * jz > reach * reach) { follow = b; jumps++; jumpT = 0.75; veil.classList.add('quick'); veil.classList.remove('clear'); }
+      else graceT = 4;
+    }
+
+    const F = focusSm;
+    const G = [Math.sin(tl * 0.43) * 0.04, 1.7 + Math.sin(tl * 0.71) * 0.025, 0];
+    let hx = G[0] - F[0], hz = G[2] - F[2]; const hl = Math.hypot(hx, hz) || 1; hx /= hl; hz /= hl;
+    const A = [F[0] + hx * 84, F[1] - 7, F[2] + hz * 84];
+    let ex0 = mix(G[0], A[0], u), ey0 = mix(G[1], A[1], Math.pow(u, 1.35)), ez0 = mix(G[2], A[2], u);
+    const eye = [mix(ex0, cp[0], s), mix(ey0, cp[1], s), mix(ez0, cp[2], s)];
+    if (dt > 0 && !eyeCut) {
+      eyeSp = Math.hypot(eye[0] - eyeWas[0], eye[1] - eyeWas[1], eye[2] - eyeWas[2]) / dt;
+      if (s >= 1) { peak.eye = Math.max(peak.eye, eyeSp); peak.roll = Math.max(peak.roll, Math.abs(roll)); peak.turn = Math.max(peak.turn, turnRate); }
+    }
+    if (dt > 0) { eyeCut = false; eyeWas[0] = eye[0]; eyeWas[1] = eye[1]; eyeWas[2] = eye[2]; }
+
+    const rl = Math.hypot(cf[0], cf[2]) || 1, r0 = [-cf[2] / rl, 0, cf[0] / rl];
+    // the gaze leads into a turn by up to 15 degrees, as a bird's head does, and wanders only a little of its own accord
+    lookLead += ((calm ? 0 : Math.max(-0.26, Math.min(0.26, turnRate * turnDir * 0.45))) - lookLead) * (1 - Math.exp(-dt * 1.5));
+    const gz = (calm ? 0 : 0.12 * Math.sin(tl * 0.21)) + lookLead, gy = calm ? 0 : 0.06 * Math.sin(tl * 0.17 + 1);
+    const qm = Math.hypot(lq[0], lq[1], lq[2]) || 1, qw = Math.min(1, qm / 14) * 0.9 / qm;
+    let gdx = cf[0] + lq[0] * qw, gdy = cf[1] * 0.7 + lq[1] * qw * 0.6, gdz = cf[2] + lq[2] * qw; const gh = Math.hypot(gdx, gdz) || 1;
+    gdy = Math.max(-0.16 * gh, Math.min(0.5 * gh, gdy)); const gl_ = Math.hypot(gdx, gdy, gdz) || 1;
+    const Lc = [cp[0] + gdx / gl_ * 30 + r0[0] * 30 * gz, cp[1] + gdy / gl_ * 30 + 30 * gy + 5, cp[2] + gdz / gl_ * 30 + r0[2] * 30 * gz];
+    const aspect = (canvas.clientWidth || 1) / (canvas.clientHeight || 1), pf = Math.max(0, Math.min(1, (1.2 - aspect) / 0.7));
+    const Lg = [F[0] * mix(0.5, 0.92, pf) + 34 * (1 - pf), F[1] * mix(0.42, 0.62, pf) + mix(40, 20, pf), F[2]];
+    const look = [0, 0, 0];
+    for (let a = 0; a < 3; a++) look[a] = mix(mix(Lg[a], F[a], ul), Lc[a], s);
+    const cr = Math.cos(roll), sr = Math.sin(roll);
+    let upx = mix(0, r0[0] * sr, s), upy = mix(1, cr, s), upz = mix(0, r0[2] * sr, s);
+
+    let fx = look[0] - eye[0], fy = look[1] - eye[1], fz = look[2] - eye[2]; const fl = Math.hypot(fx, fy, fz) || 1; fx /= fl; fy /= fl; fz /= fl;
+    let rx = fy * upz - fz * upy, ry = fz * upx - fx * upz, rz = fx * upy - fy * upx; const rr = Math.hypot(rx, ry, rz) || 1; rx /= rr; ry /= rr; rz /= rr;
+    if (dt > 0) {
+      const live = performance.now() - gaze.at < 3500 ? 1 : 0, kg = 1 - Math.exp(-dt * 3);
+      gaze.on += (live - gaze.on) * (1 - Math.exp(-dt * (live ? 4 : 0.7))); gaze.x += (gaze.tx * gaze.on - gaze.x) * kg; gaze.y += (gaze.ty * gaze.on - gaze.y) * kg;
+    }
+    if (gaze.x || gaze.y) {      // the head turns toward the mouse: less on the dike than in flight
+      const w = 0.5 + 0.5 * s, gx = gaze.x * 0.158 * w, gy = gaze.y * 0.105 * w, ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx;
+      fx += rx * gx + ux * gy; fy += ry * gx + uy * gy; fz += rz * gx + uz * gy; const l = Math.hypot(fx, fy, fz) || 1; fx /= l; fy /= l; fz /= l;
+      const d = rx * fx + ry * fy + rz * fz; rx -= fx * d; ry -= fy * d; rz -= fz * d; const l2 = Math.hypot(rx, ry, rz) || 1; rx /= l2; ry /= l2; rz /= l2;
+    }
+    cam.eye = eye; cam.f = [fx, fy, fz]; cam.r = [rx, ry, rz];
+    cam.u = [ry * fz - rz * fy, rz * fx - rx * fz, rx * fy - ry * fx];
+    // on tall screens widen the view so the flock still fits across the frame
+    let tanV = Math.tan((38 + 14 * u + (calm ? 8 : 24) * s) * Math.PI / 360);
+    if (tanV * aspect < 0.364) tanV = Math.min(0.364 / aspect, 0.754);
+    cam.fov = Math.atan(tanV) * 360 / Math.PI;
+    // The viewer's place in the flock, for the birds to keep clear of. The room it keeps to the side is set by the screen:
+    // the nearest bird should not span much more than two fifths of its short side (0.7 m on a wide screen, 1.4 m on a
+    // phone held upright), half as much again in the calm flight. Ahead it keeps three times that, 2.6 m at most.
+    here.x = cp[0]; here.y = cp[1]; here.z = cp[2]; here.hx = cf[0]; here.hy = cf[1]; here.hz = cf[2]; here.w = s;
+    const side = Math.min(1.5, 0.4 / (0.42 * 2 * Math.atan(Math.min(tanV, tanV * aspect)))), wider = calm ? 1.5 : 1;
+    here.side = side * wider; here.ahead = Math.min(side * 3, 2.6) * wider;
+    if (follow !== here.self) { here.was = here.self; here.self = follow; here.mix = 0; }
+    here.mix = Math.min(1, here.mix + dt / 1.5);
+    // the edges close in while the view turns hard: not below 20 degrees a second, fully at 60; quick to come, slow to go
+    const want = s * Math.max(calm ? 0.35 : 0, Math.min(1, (turnRate - 0.35) / 0.7));
+    if (dt > 0) shade += (want - shade) * (1 - Math.exp(-dt / (want > shade ? 0.2 : 0.6)));
+    if (Math.abs(shade - shadeShown) > 0.004) { shadeShown = shade; turnVig.style.opacity = shade.toFixed(3); }
+  }
+
+  function viewProj(aspect) {
+    const { eye, r, u, f } = cam, fo = 1 / Math.tan(cam.fov * Math.PI / 360), near = 0.1, far = 5000, nf = 1 / (near - far);
+    const d = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    const V = [r[0], u[0], -f[0], 0, r[1], u[1], -f[1], 0, r[2], u[2], -f[2], 0, -d(r, eye), -d(u, eye), d(f, eye), 1];
+    const P = [fo / aspect, 0, 0, 0, 0, fo, 0, 0, 0, 0, (far + near) * nf, -1, 0, 0, 2 * far * near * nf, 0];
+    const o = new Float32Array(16);
+    for (let c = 0; c < 4; c++) for (let rw = 0; rw < 4; rw++) {
+      let sum = 0; for (let k = 0; k < 4; k++) sum += P[k * 4 + rw] * V[c * 4 + k]; o[c * 4 + rw] = sum;
+    }
+    return o;
+  }
+
+  /* ---------- drawing ---------- */
+  let pxRatio = 1;
+  const air = { far: 2, haze: 0.002 };      // inside the flock: how a far bird's faintness follows its enlargement (2 is its true share of sky; 0.8 is the look from the dike), and what the air takes per metre
+  let wingStill = -1, wingShut = 0.01;  // far wings: -1 follows the frame rate (see draw), 0 always beat, 1 always still; a near wing blurs over a hundredth of a second
+  function resize() {
+    const cw = canvas.clientWidth || 1, ch = canvas.clientHeight || 1;
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cap = 3.4e6; if (cw * ch * dpr * dpr > cap) dpr = Math.sqrt(cap / (cw * ch));
+    const w = Math.max(1, Math.round(cw * dpr)), h = Math.max(1, Math.round(ch * dpr));
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    pxRatio = h / ch;
+  }
+
+  function draw(time) {
+    resize();
+    const w = canvas.width, h = canvas.height, aspect = w / h, tanH = Math.tan(cam.fov * Math.PI / 360);
+    gl.viewport(0, 0, w, h);
+    gl.disable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE); gl.disable(gl.BLEND);
+
+    gl.useProgram(skyProg.p); gl.bindVertexArray(emptyVao);
+    gl.uniform3fv(skyProg.u.uR, cam.r); gl.uniform3fv(skyProg.u.uU, cam.u); gl.uniform3fv(skyProg.u.uF, cam.f);
+    gl.uniform3fv(skyProg.u.uCam, cam.eye); gl.uniform3fv(skyProg.u.uSun, SUN);
+    gl.uniform1f(skyProg.u.uTan, tanH); gl.uniform1f(skyProg.u.uAspect, aspect); gl.uniform1f(skyProg.u.uTime, time); gl.uniform1f(skyProg.u.uPix, 2 * tanH / h);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    const VP = viewProj(aspect), n = active, ex = cam.eye[0], ey = cam.eye[1], ez = cam.eye[2];
+    gl.useProgram(reedProg.p); gl.uniformMatrix4fv(reedProg.u.uVP, false, VP); gl.uniform1f(reedProg.u.uTime, 0);
+    gl.bindVertexArray(townVao);
+    gl.uniform3f(reedProg.u.uCol, 0.165, 0.150, 0.195); gl.drawArrays(gl.TRIANGLES, 0, townDark);
+    gl.uniform3f(reedProg.u.uCol, 0.95, 0.66, 0.32); gl.drawArrays(gl.TRIANGLES, townDark, townVerts - townDark);
+    // birds close to the lens get the full model, the rest a light one
+    let nNear = 0, nFar = 0;
+    for (let i = 0; i < n; i++) {
+      const dx = px[i] - ex, dy = py[i] - ey, dz = pz[i] - ez;
+      const o = (dx * dx + dy * dy + dz * dz < 576 ? nNear++ : n - 1 - nFar++) * INST, s4 = i * 4;
+      inst[o] = px[i]; inst[o + 1] = py[i]; inst[o + 2] = pz[i]; inst[o + 3] = vx[i]; inst[o + 4] = vy[i]; inst[o + 5] = vz[i]; inst[o + 6] = bank[i];
+      inst[o + 7] = seeds[s4]; inst[o + 8] = seeds[s4 + 1]; inst[o + 9] = seeds[s4 + 2]; inst[o + 10] = seeds[s4 + 3];
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, instBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, inst, 0, n * INST);
+
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    const B = birdProg.u; gl.useProgram(birdProg.p);
+    gl.uniformMatrix4fv(B.uVP, false, VP); gl.uniform3fv(B.uCam, cam.eye); gl.uniform3fv(B.uSun, SUN);
+    gl.uniform1f(B.uTime, time); gl.uniform1f(B.uSimT, simT); gl.uniform4fv(B['uWave[0]'], waves);
+    gl.uniform1f(B.uPx, h / (2 * tanH));
+    gl.uniform1f(B.uSize, 0.4); gl.uniform1f(B.uSpread, 5.0); gl.uniform1f(B.uFar, 0.8 + (air.far - 0.8) * here.w); gl.uniform1f(B.uAir, air.haze * here.w); gl.uniform1f(B.uLand, land > 0 ? 1 : 0);
+    gl.uniform1f(B.uStar, 1); gl.uniform1f(B.uShut, wingShut);
+    gl.uniform4f(B.uHere, here.x, here.y, here.z, here.w * here.on); gl.uniform3f(B.uHead, here.hx, here.hy, here.hz); gl.uniform4f(B.uKeep, here.side, here.ahead, RB, freeG);
+    gl.uniform1f(B.uFree, 0);
+    const nD = freeG > 0 ? nA : 0;
+    for (let a = 0; a < nD; a++) {
+      placeFree(a, fOut); const q = a * INST, s4 = a * 4;
+      fInst[q] = fOut.x; fInst[q + 1] = fOut.y; fInst[q + 2] = fOut.z; fInst[q + 3] = fOut.vx; fInst[q + 4] = fOut.vy; fInst[q + 5] = fOut.vz; fInst[q + 6] = fOut.bank;
+      fInst[q + 7] = aSeed[s4]; fInst[q + 8] = aSeed[s4 + 1]; fInst[q + 9] = aSeed[s4 + 2]; fInst[q + 10] = aSeed[s4 + 3];
+    }
+    if (nD > 0) { gl.bindBuffer(gl.ARRAY_BUFFER, freeBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, fInst, 0, nD * INST); }
+    gl.uniform4f(B.uSelf, here.self >= 0 ? seeds[here.self * 4] : -1, here.was >= 0 ? seeds[here.was * 4] : -1, here.mix, 0);
+    // At thirty frames a second a wingbeat gets only two or three frames and the far flock strobes, so there the far birds
+    // hold their average pose. A screen that keeps sixty shows them beating, as before.
+    gl.uniform1f(B.uStill, wingStill < 0 ? Math.max(0, Math.min(1, (ema - 20) / 12)) : wingStill);
+    if (nFar > 0) {
+      gl.bindVertexArray(farVao); gl.bindBuffer(gl.ARRAY_BUFFER, instBuf); instPointers(nNear * INST * 4);
+      // soft smoke pass: from afar the flock reads as one dark body, not as separate dots
+      gl.uniform1f(B.uAlpha, 0.26); gl.uniform1f(B.uHaze, 1); gl.uniform1f(B.uMinPx, 11 * pxRatio);
+      for (let c = 0; c < 2; c++) { gl.uniform1f(B.uCopy, c); gl.drawArraysInstanced(gl.TRIANGLES, 0, farVerts, nFar); }
+      gl.uniform1f(B.uAlpha, 1); gl.uniform1f(B.uHaze, 0); gl.uniform1f(B.uMinPx, 2.6 * pxRatio);
+      for (let c = 0; c < copies; c++) { gl.uniform1f(B.uCopy, c); gl.drawArraysInstanced(gl.TRIANGLES, 0, farVerts, nFar); }
+    }
+    gl.uniform1f(B.uAlpha, 1); gl.uniform1f(B.uHaze, 0); gl.uniform1f(B.uMinPx, 2.6 * pxRatio);
+    // Near birds hide one another as solid things do. Their bodies and tails are drawn first and remember their depth;
+    // the wings come after, tested against the bodies but leaving no depth of their own, since a blurred wing is see-through.
+    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.depthMask(true); gl.clear(gl.DEPTH_BUFFER_BIT);
+    // The birds flying free beside the viewer are drawn the same way, bodies with the bodies and wings with the wings.
+    if (nNear > 0) {
+      gl.bindVertexArray(nearVao);
+      for (let c = 0; c < copies; c++) { gl.uniform1f(B.uCopy, c); gl.drawArraysInstanced(gl.TRIANGLES, 0, bodyVerts, nNear); }
+    }
+    if (nD > 0) { gl.bindVertexArray(freeVao); gl.uniform1f(B.uCopy, 0); gl.uniform1f(B.uFree, 1); gl.drawArraysInstanced(gl.TRIANGLES, 0, bodyVerts, nD); gl.uniform1f(B.uFree, 0); }
+    gl.depthMask(false);
+    if (nNear > 0) {
+      gl.bindVertexArray(nearVao);
+      for (let c = 0; c < copies; c++) { gl.uniform1f(B.uCopy, c); gl.drawArraysInstanced(gl.TRIANGLES, bodyVerts, WING_VERTS, nNear); }
+    }
+    if (nD > 0) { gl.bindVertexArray(freeVao); gl.uniform1f(B.uCopy, 0); gl.uniform1f(B.uFree, 1); gl.drawArraysInstanced(gl.TRIANGLES, bodyVerts, WING_VERTS, nD); gl.uniform1f(B.uFree, 0); }
+    gl.depthMask(true);
+
+    if (falcon.on) {
+      falconInst[0] = falcon.x; falconInst[1] = falcon.y; falconInst[2] = falcon.z; falconInst[3] = falcon.vx; falconInst[4] = falcon.vy; falconInst[5] = falcon.vz;
+      gl.bindBuffer(gl.ARRAY_BUFFER, falconBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, falconInst);
+      gl.uniform1f(B.uSize, 1.0); gl.uniform1f(B.uCopy, 0); gl.uniform1f(B.uMinPx, 3.4 * pxRatio); gl.uniform1f(B.uStar, 0);
+      gl.bindVertexArray(falconVao); gl.drawArraysInstanced(gl.TRIANGLES, 0, falconVerts, 1);
+    }
+    gl.disable(gl.DEPTH_TEST);
+
+    if (cam.eye[1] < 70) {
+      gl.disable(gl.BLEND); gl.useProgram(reedProg.p);
+      gl.uniformMatrix4fv(reedProg.u.uVP, false, VP); gl.uniform1f(reedProg.u.uTime, time); gl.uniform3f(reedProg.u.uCol, 0.020, 0.017, 0.022);
+      gl.bindVertexArray(reedVao); gl.drawArrays(gl.TRIANGLES, 0, reedVerts);
+    }
+    gl.bindVertexArray(null);
+  }
+
+  /* ---------- sound: the air, the flock as a few sounding clouds, and the birds beside you ----------
+     Five layers, all generated live, no audio files.
+     The air past your ears, deeper and louder the faster you fly.
+     The clouds: ten times a second the flock is sorted into a coarse grid. Where the birds are thickest a sound node
+     sits, giving off brown noise (the deep wall of a murmuration) and a band of wing whoosh, louder the more birds it
+     holds. Each node is panned and muffled by where it is from the camera, and spread wider the closer it is. When
+     the birds in a node turn or brake hard their wings work harder, so the node surges louder and brighter. The idea
+     came from a reader of the animation on Reddit.
+     The bed: the rush of every bird within thirty metres, as loud as there are birds.
+     The nearest birds, each with a voice of its own that beats at its wingbeat and moves as the bird moves.
+     And your own wings.
+     Nothing about the sound of starling wings has been measured, so every level and filter here was set by reasoning
+     and is there to be tuned by ear. */
+  const VOICES = small ? 4 : 6, SC = 16, SG = 32, SG3 = SG * SG * SG;
+  const NEAR_V = small ? 6 : 12, BEDS = small ? 2 : 3;      // voices for the nearest birds, and streams of the bed
+  const BED_LEVEL = 0.13, NEAR_LEVEL = 0.36, OWN_LEVEL = 0.2, ROOST_LEVEL = 0.25;
+  const SND = { wind: 1, clouds: 1, bed: 1, near: 1, own: 1, roost: 1, sub: 25 };   // the five layers, each at full level, and the drift filter in Hz; the test hooks can change them
+  const sCnt = new Float32Array(SG3), sX = new Float32Array(SG3), sY = new Float32Array(SG3), sZ = new Float32Array(SG3);
+  const sAx = new Float32Array(SG3), sAy = new Float32Array(SG3), sAz = new Float32Array(SG3);
+  const sOcc = new Int32Array(Math.min(SG3, N)), pvx = new Float32Array(N), pvy = new Float32Array(N), pvz = new Float32Array(N);
+  const EFFORT_FROM = 1.6, EFFORT_SPAN = 1.6;     // how fast a node's mean velocity swings (m/s²), from calm to a full surge; calm flight sits near 1.4
+  const nodes = [];
+  let voices = [];
+  let sOccN = 0, sPrevT = -1;
+  let ac = null, master = null, sMeter = null, soundOn = false, rig = null, lastRig = null;
+
+  // finds the densest parts of the flock and how hard the birds there are working
+  function senseFlock() {
+    const n = active, dtS = simT - sPrevT, fresh = sPrevT < 0 || dtS <= 1e-4 || dtS > 1, idt = fresh ? 0 : 1 / dtS; sPrevT = simT;
+    let x0 = 1e9, y0 = 1e9, z0 = 1e9, x1 = -1e9, y1 = -1e9, z1 = -1e9;
+    for (let i = 0; i < n; i++) {
+      const x = px[i], y = py[i], z = pz[i];
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; if (z < z0) z0 = z; if (z > z1) z1 = z;
+    }
+    const cs = Math.max(SC, Math.max(x1 - x0, y1 - y0, z1 - z0) / (SG - 1.01)), ics = 1 / cs;
+    for (let k = 0; k < sOccN; k++) { const c = sOcc[k]; sCnt[c] = 0; sX[c] = 0; sY[c] = 0; sZ[c] = 0; sAx[c] = 0; sAy[c] = 0; sAz[c] = 0; }
+    sOccN = 0;
+    for (let i = 0; i < n; i++) {
+      const c = ((((px[i] - x0) * ics) | 0) * SG + (((py[i] - y0) * ics) | 0)) * SG + (((pz[i] - z0) * ics) | 0);
+      if (sCnt[c] === 0) sOcc[sOccN++] = c;
+      // summed as vectors, so each bird's own jitter cancels and only the turning the birds share is left
+      sCnt[c]++; sX[c] += px[i]; sY[c] += py[i]; sZ[c] += pz[i]; sAx[c] += vx[i] - pvx[i]; sAy[c] += vy[i] - pvy[i]; sAz[c] += vz[i] - pvz[i];
+      pvx[i] = vx[i]; pvy[i] = vy[i]; pvz[i] = vz[i];
+    }
+    // the densest cells, at least two cells apart, each heard together with the cells around it (about 25 m each way)
+    nodes.length = 0;
+    const minC = n * 0.004;
+    for (let v = 0; v < VOICES; v++) {
+      let best = -1, bc = minC;
+      for (let k = 0; k < sOccN; k++) {
+        const c = sOcc[k]; if (sCnt[c] <= bc) continue;
+        const cx = (c / (SG * SG)) | 0, cy = ((c / SG) | 0) % SG, cz = c % SG;
+        let near = false;
+        for (const nd of nodes) if (Math.abs(nd.cx - cx) < 2 && Math.abs(nd.cy - cy) < 2 && Math.abs(nd.cz - cz) < 2) { near = true; break; }
+        if (!near) { best = c; bc = sCnt[c]; }
+      }
+      if (best < 0) break;
+      const cx = (best / (SG * SG)) | 0, cy = ((best / SG) | 0) % SG, cz = best % SG;
+      let w = 0, x = 0, y = 0, z = 0, ax = 0, ay = 0, az = 0;
+      for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) {
+        const qx = cx + i, qy = cy + j, qz = cz + k;
+        if (qx < 0 || qy < 0 || qz < 0 || qx >= SG || qy >= SG || qz >= SG) continue;
+        const c = (qx * SG + qy) * SG + qz; w += sCnt[c]; x += sX[c]; y += sY[c]; z += sZ[c]; ax += sAx[c]; ay += sAy[c]; az += sAz[c];
+      }
+      nodes.push({ cx, cy, cz, w: w / n, x: x / w, y: y / w, z: z / w, a: Math.sqrt(ax * ax + ay * ay + az * az) / w * idt });
+    }
+  }
+
+  // Builds the whole sound on an audio context: the one that plays, or an offline one that renders to a buffer (test hooks).
+  function buildSound(ctx) {
+    const sr = ctx.sampleRate, len = sr * 3, white = ctx.createBuffer(1, len, sr), d = white.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    // brown noise: white noise summed up with a slow leak, then tilted so its end meets its start and the loop does not click
+    const blen = sr * 8, brown = ctx.createBuffer(1, blen, sr), b = brown.getChannelData(0);
+    let acc = 0; for (let i = 0; i < blen; i++) { acc = (acc + 0.02 * (Math.random() * 2 - 1)) / 1.02; b[i] = acc * 3.5; }
+    const tilt = b[blen - 1] - b[0]; for (let i = 0; i < blen; i++) b[i] -= tilt * i / (blen - 1);
+    const loop = (buf, at, rate) => { const s = ctx.createBufferSource(); s.buffer = buf; s.loop = true; s.playbackRate.value = rate; s.start(0, at); return s; };
+    const pan = at => { if (!ctx.createStereoPanner) return ctx.createGain(); const p = ctx.createStereoPanner(); p.pan.value = at || 0; return p; };
+    const gain = (v, to) => { const g = ctx.createGain(); g.gain.value = v; if (to) g.connect(to); return g; };
+    const filter = (type, f, q) => { const n = ctx.createBiquadFilter(); n.type = type; n.frequency.value = f; n.Q.value = q; return n; };
+    const R = { ctx, voices: [], near: [], beds: [], wind: [], next: 0, last: -1, sense: 0, scan: 0, air: 4, n30: 0, surge: 0, peak: 0, ph: [0, 1, 2, 3, 4, 5, 6, 7].map(() => Math.random() * 6.283) };
+
+    // a soft limiter, so a surge right beside the camera never clips
+    const lim = ctx.createDynamicsCompressor(); lim.threshold.value = -9; lim.knee.value = 6; lim.ratio.value = 6; lim.attack.value = 0.01; lim.release.value = 0.25; lim.connect(ctx.destination);
+    // The looped brown noise drifts slowly up and down (the ramp that hides its loop point), far below hearing but at
+    // times stronger than everything that is heard. It is taken out before the limiter, so the limiter works on surges
+    // and not on the drift.
+    const sub = filter('highpass', SND.sub, 0.7); sub.connect(lim);
+    R.master = gain(0, sub);
+    R.meter = ctx.createAnalyser(); R.meter.fftSize = 2048; R.master.connect(R.meter);
+
+    // The air past the viewer's ears: one stream of noise for each ear, so it sits at the head and not out in the scene.
+    // It deepens and loudens with the viewer's own speed (updateSound).
+    for (let k = 0; k < 2; k++) {
+      const f = filter('lowpass', 260, 0.3), g = gain(0.39), p = pan(k ? 0.75 : -0.75);
+      loop(white, k * 1.37, k ? 0.93 : 1).connect(f); f.connect(g); g.connect(p); p.connect(R.master);
+      R.wind.push({ f, g });
+    }
+
+    // The flock as a few sounding clouds. Each voice: two brown noises panned apart (the wall, wider when near) and a
+    // whoosh of wings between them. No flutter here: thousands of wings out of step add up to a smooth rush.
+    for (let v = 0; v < VOICES; v++) {
+      const vo = { x: 0, y: 0, z: 0, live: false, s: 0, lvl: 0, lp: [], pn: [] };
+      vo.g = gain(0, R.master);
+      for (let k = 0; k < 2; k++) {
+        const f = filter('lowpass', 300, 0.4), p = pan();
+        loop(brown, (v * 2 + k) * 8 / (VOICES * 2), 0.92 + 0.16 * Math.random()).connect(f); f.connect(p); p.connect(vo.g);
+        vo.lp.push(f); vo.pn.push(p);
+      }
+      vo.bp = filter('bandpass', 900, 0.7); vo.wg = gain(0); vo.wp = pan();
+      loop(white, v * 3 / VOICES, 0.95 + 0.1 * Math.random()).connect(vo.bp); vo.bp.connect(vo.wg); vo.wg.connect(vo.wp); vo.wp.connect(R.master);
+      R.voices.push(vo);
+    }
+
+    // The bed: the rush of all the birds around the viewer, spread left, right and centre. As loud as there are birds
+    // within thirty metres (updateSound).
+    for (let k = 0; k < BEDS; k++) {
+      const f = filter('bandpass', 1400, 0.7), g = gain(0), p = pan(k === 0 ? -0.8 : k === 1 ? 0.8 : 0);
+      loop(white, 0.4 + k * 0.83, 0.9 + 0.07 * k).connect(f); f.connect(g); g.connect(p); p.connect(R.master);
+      R.beds.push({ f, g });
+    }
+
+    // One wingbeat as a swell of loudness: the downstroke, two fifths of the beat, is heard; the way back up hardly at all.
+    const HARM = 9, re = new Float32Array(HARM), im = new Float32Array(HARM);
+    for (let k = 1; k < HARM; k++) re[k] = 2 * Math.sin(k * Math.PI * 0.4) / (k * Math.PI) * (1 - k / HARM);
+    const beat = ctx.createPeriodicWave(re, im, { disableNormalization: true });
+    const flapper = hz => { const o = ctx.createOscillator(); o.setPeriodicWave(beat); o.frequency.value = hz; o.start(); return o; };
+
+    // The nearest birds, one voice each: a hiss of wing noise that beats at that bird's own rate, placed left or right
+    // by where the bird is, louder and brighter the closer it comes. Which bird a voice follows is settled in updateSound.
+    for (let v = 0; v < NEAR_V; v++) {
+      const nv = { i: -1, c: 0, hold: 0, d: 0, p: 0, lvl: 0 };
+      nv.bp = filter('bandpass', 2400, 0.9); nv.env = gain(0.45); nv.lp = filter('lowpass', 6000, 0.5); nv.g = gain(0); nv.pn = pan();
+      nv.osc = flapper(11); nv.osc.connect(gain(0.9, nv.env.gain));
+      loop(white, v * 3 / NEAR_V + 0.11, 0.9 + 0.2 * Math.random()).connect(nv.bp); nv.bp.connect(nv.env); nv.env.connect(nv.lp); nv.lp.connect(nv.g); nv.g.connect(nv.pn); nv.pn.connect(R.master);
+      R.near.push(nv);
+    }
+
+    // The viewer's own wings, in the middle of the head: a soft thump and, a moment after it, a rush of air, at the rate
+    // of the bird the camera rides. A phone's speaker carries the rush; the thump needs headphones.
+    R.own = { osc: flapper(11), out: gain(0, R.master) };
+    const thump = gain(0.4, R.own.out), rush = gain(0.4), late = ctx.createDelay(0.1); late.delayTime.value = 0.025;
+    R.own.osc.connect(gain(1, thump.gain)); R.own.osc.connect(gain(1, rush.gain));
+    const tf = filter('lowpass', 130, 0.7), rf = filter('bandpass', 700, 0.8);
+    loop(brown, 3.3, 1).connect(tf); tf.connect(thump);
+    loop(white, 2.1, 0.8).connect(rf); rf.connect(rush); rush.connect(late); late.connect(gain(0.22, R.own.out));
+
+    // The roost: once the birds are down in the reeds they chatter, thousands at once, heard from the dike as a far,
+    // restless twitter. Three bands of noise, each broken up at its own uneven pace. Roosting starlings are known to
+    // chatter; how it sounds from four hundred metres was not measured, so this is quiet and there to be tuned by ear.
+    R.roost = gain(0, R.master);
+    const far = filter('lowpass', 5200, 0.5); far.connect(R.roost);
+    [[2600, 7.3, 13.1, -0.35], [3700, 9.1, 17.3, 0.1], [4900, 11.7, 19.9, 0.4]].forEach((c, k) => {
+      const bp = filter('bandpass', c[0], 5), g = gain(0.35), pn = pan(c[3]);
+      loop(white, 0.37 + 0.8 * k, 0.9 + 0.07 * k).connect(bp); bp.connect(g); g.connect(pn); pn.connect(far);
+      for (const [hz, depth, type] of [[c[1], 0.4, 'sawtooth'], [c[2], 0.3, 'sine']]) { const o = ctx.createOscillator(); o.type = type; o.frequency.value = hz; o.connect(gain(depth, g.gain)); o.start(); }
+    });
+    return R;
+  }
+  function initAudio() {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    rig = buildSound(ac); master = rig.master; sMeter = rig.meter; voices = rig.voices;
+  }
+
+  function updateAudio() {
+    if (!ac || !soundOn) return;
+    updateSound(rig, performance.now() / 1000);
+  }
+  // Sets every level, filter and pan of a rig from where the birds and the camera are, twenty-five times a second.
+  // now is that rig's clock, in seconds.
+  function updateSound(R, now) {
+    if (now < R.next) return; R.next = now + 0.04;
+    const dt = R.last < 0 ? 0.04 : Math.min(0.25, now - R.last); R.last = now;
+    const t = R.ctx.currentTime, E = cam.eye, Rt = cam.r, F = cam.f, P = x => Math.max(-1, Math.min(1, x)), ease = tau => 1 - Math.exp(-dt / tau);
+    if (now >= R.sense) {       // ten times a second: where the flock is thickest, and how many birds fly within thirty metres
+      R.sense = now + 0.1;
+      senseFlock();
+      // each node takes the nearest free voice, so a voice follows the same part of the flock as it moves
+      for (const vo of R.voices) vo.node = null;
+      for (const nd of nodes) {
+        let best = null, bd = 1e12;
+        for (const vo of R.voices) {
+          if (vo.node) continue;
+          const d = vo.live ? (vo.x - nd.x) ** 2 + (vo.y - nd.y) ** 2 + (vo.z - nd.z) ** 2 : 1e11;
+          if (d < bd) { bd = d; best = vo; }
+        }
+        best.node = nd;
+        if (!best.live) { best.x = nd.x; best.y = nd.y; best.z = nd.z; best.live = true; }
+      }
+      let c30 = 0;
+      for (let i = 0; i < active; i += 2) { const dx = px[i] - E[0], dy = py[i] - E[1], dz = pz[i] - E[2]; if (dx * dx + dy * dy + dz * dz < 900) c30++; }
+      R.n30 = c30 * 2 / active;
+    }
+
+    // the air: deeper and louder the faster the viewer flies, with slow gusts of its own in each ear
+    R.air += (eyeSp - R.air) * ease(0.6);
+    const sp = Math.max(4, Math.min(16, R.air)), wcut = 260 + 300 * (sp - 4) / 12, wgain = 0.39 * Math.pow(10, 0.5 * (sp - 4) / 20) * SND.wind;      // half a decibel for each metre a second
+    for (let k = 0; k < 2; k++) {
+      const w = R.wind[k], gust = 1 + 0.18 * Math.sin(0.37 * now + R.ph[k]) + 0.12 * Math.sin(0.83 * now + R.ph[k + 2]);
+      w.f.frequency.setTargetAtTime(wcut * (k ? 1.06 : 1), t, 0.3); w.g.gain.setTargetAtTime(wgain * gust, t, 0.3);
+    }
+
+    // the clouds
+    let surge = 0;
+    for (const vo of R.voices) {
+      const nd = vo.node;
+      if (nd) { const k = ease(0.144); vo.x += (nd.x - vo.x) * k; vo.y += (nd.y - vo.y) * k; vo.z += (nd.z - vo.z) * k; }
+      else vo.live = false;
+      // surge: when the birds turn or brake together their wings work harder. It rises in a sixth of a second and
+      // settles over a second, up to twice as loud (6 dB) in the wall and two and a half times (8 dB) in the whoosh.
+      const want = nd ? clamp01((nd.a - EFFORT_FROM) / EFFORT_SPAN) : 0;
+      vo.s += (want - vo.s) * ease(want > vo.s ? 0.15 : 1);
+      vo.lvl = nd ? Math.sqrt(nd.w) : 0;
+      const dx = vo.x - E[0], dy = vo.y - E[1], dz = vo.z - E[2], d = Math.hypot(dx, dy, dz) || 1;
+      const near = 1 / (1 + Math.pow(d / 40, 1.3)), air = Math.exp(-d / 260), behind = (dx * F[0] + dy * F[1] + dz * F[2]) / d < -0.2;
+      const p = 0.85 * (dx * Rt[0] + dy * Rt[1] + dz * Rt[2]) / d, spread = Math.min(0.7, 0.1 + 0.5 * Math.atan(20 / d)), s = vo.s;
+      if (nd && s * near > surge) surge = s * near;
+      const cut = (170 + 1300 * near + 1500 * s) * (behind ? 0.6 : 1);
+      vo.g.gain.setTargetAtTime(vo.lvl * near * 0.8 * (1 + s) * 1.15 * SND.clouds * aloft, t, s > 0.3 ? 0.08 : 0.3);
+      vo.lp[0].frequency.setTargetAtTime(cut, t, 0.15); vo.lp[1].frequency.setTargetAtTime(cut * 1.1, t, 0.15);
+      if (vo.pn[0].pan) { vo.pn[0].pan.setTargetAtTime(P(p - spread), t, 0.15); vo.pn[1].pan.setTargetAtTime(P(p + spread), t, 0.15); vo.wp.pan.setTargetAtTime(P(p), t, 0.15); }
+      vo.wg.gain.setTargetAtTime(vo.lvl * near * air * 0.45 * (1 + 1.5 * s) * (behind ? 0.6 : 1) * 1.15 * SND.clouds * aloft, t, s > 0.3 ? 0.06 : 0.3);
+      vo.bp.frequency.setTargetAtTime(650 + 300 * near + 900 * s, t, 0.15);
+    }
+    R.surge = surge; if (surge > R.peak) R.peak = surge;
+    if (R.log) R.log.push([+now.toFixed(2), +surge.toFixed(3), +R.air.toFixed(1), +R.n30.toFixed(3)]);
+
+    // The bed. Each shell of flock around a listener adds the same loudness, so the rush follows how many birds are
+    // near: half the birds, 3 dB less. Each stream swells a little on its own, and all of them surge with the clouds.
+    const bed = BED_LEVEL * Math.sqrt(Math.min(1.6, R.n30 / 0.15)) * (1 + surge) * SND.bed;
+    for (let k = 0; k < R.beds.length; k++) {
+      const bd = R.beds[k];
+      bd.g.gain.setTargetAtTime(bed * (1 + 0.16 * Math.sin((0.6 + 0.45 * k) * now + R.ph[k + 4])), t, surge > 0.3 ? 0.12 : 0.3);
+      bd.f.frequency.setTargetAtTime(1400 + 700 * surge + 110 * k, t, 0.2);
+    }
+
+    // The nearest birds. Four times a second the drawn birds within 3.2 m are listed, nearest first, and a free voice
+    // takes the nearest that has none. A voice keeps its bird until it is 4.5 m away, so voices do not hop about.
+    const o = R.o || (R.o = {});
+    if (now >= R.scan) {
+      R.scan = now + 0.25;
+      const list = [];
+      if (here.w > 0.05 && SND.near > 0) for (let i = 0; i < active; i++) {
+        const dx = px[i] - E[0], dy = py[i] - E[1], dz = pz[i] - E[2];
+        if (dx * dx + dy * dy + dz * dz > 156) continue;
+        for (let c = 0; c < copies; c++) {
+          if (i === follow && c === 0) continue;        // the viewer's own bird has its own sound
+          drawnPos(i, c, clock, o); if (o.hidden) continue;
+          const d2 = (o.x - E[0]) ** 2 + (o.y - E[1]) ** 2 + (o.z - E[2]) ** 2;
+          if (d2 < 10.24) list.push([d2, i, c]);
+        }
+      }
+      if (here.w > 0.05 && SND.near > 0 && freeG > 0.5) for (let a = 0; a < nA; a++) {      // and the free birds (a bird numbered N or more is one of them)
+        const dx = here.x + aD[a * 3] - E[0], dy = here.y + aD[a * 3 + 1] - E[1], dz = here.z + aD[a * 3 + 2] - E[2], d2 = dx * dx + dy * dy + dz * dz;
+        if (d2 < 10.24) list.push([d2, N + a, 0]);
+      }
+      list.sort((a, b) => a[0] - b[0]);
+      for (const nv of R.near) {
+        if (nv.i >= 0 || now < nv.hold) continue;
+        const pick = list.find(q => !R.near.some(m => m.i === q[1] && m.c === q[2]));
+        if (!pick) break;
+        nv.i = pick[1]; nv.c = pick[2];
+        const sd = seedOf(nv.i, 1) * 7.3 + nv.c * 0.61, hue = sd - Math.floor(sd);
+        nv.bp.frequency.setValueAtTime(1500 + 1700 * hue, t); nv.hz = (62 + 14 * seedOf(nv.i, 3)) / 6.2832;
+      }
+    }
+    for (const nv of R.near) {
+      if (nv.i < 0) continue;
+      let gone = (nv.i < N ? nv.i >= active || nv.c >= copies : nv.i - N >= nA) || here.w <= 0.05;
+      if (!gone) {
+        drawnPos(nv.i, nv.c, clock, o);
+        const dx = o.x - E[0], dy = o.y - E[1], dz = o.z - E[2], d = Math.hypot(dx, dy, dz) || 1;
+        if (d > 4.5 || o.hidden) gone = true;
+        else {
+          const behind = (dx * F[0] + dy * F[1] + dz * F[2]) / d < -0.2, far = clamp01((d - 3.2) / 1.3);
+          nv.d = d; nv.p = 0.9 * (dx * Rt[0] + dy * Rt[1] + dz * Rt[2]) / d;
+          nv.lvl = NEAR_LEVEL * 0.5 / Math.max(0.5, d) * (1 - far * far * (3 - 2 * far)) * (behind ? 0.7 : 1) * here.w * SND.near;
+          nv.g.gain.setTargetAtTime(nv.lvl, t, 0.04);
+          nv.lp.frequency.setTargetAtTime(Math.max(2500, 7000 - 1100 * d) * (behind ? 0.6 : 1), t, 0.08);
+          if (nv.pn.pan) nv.pn.pan.setTargetAtTime(P(nv.p), t, 0.05);
+          nv.osc.frequency.setTargetAtTime(nv.hz * (1 + 0.15 * surge), t, 0.2);      // wings beat faster in a surge
+        }
+      }
+      if (gone) { nv.i = -1; nv.lvl = 0; nv.hold = now + 0.2; nv.g.gain.setTargetAtTime(0, t, 0.04); }
+    }
+
+    // the viewer's own wings, once it flies with the flock
+    R.own.osc.frequency.setTargetAtTime((62 + 14 * seeds[follow * 4 + 3]) / 6.2832 * (1 + 0.15 * surge), t, 0.3);
+    R.own.out.gain.setTargetAtTime(OWN_LEVEL * here.w * SND.own, t, 0.5);
+    R.roost.gain.setTargetAtTime(ROOST_LEVEL * land * (1 - aloft) * SND.roost, t, 1.5);
+  }
+  // Test hook: the sound of the next sec seconds of flight, rendered to a buffer with the flock stepped in time with it,
+  // or (still) of this one moment held, so that one layer can be weighed against another.
+  const seedOf = (i, k) => i < N ? seeds[i * 4 + k] : aSeed[(i - N) * 4 + k];
+  function renderSound(sec, level, still) {
+    const sr = 44100, oc = new OfflineAudioContext(2, Math.ceil(sec * sr), sr), R = buildSound(oc), dtA = 1 / 30;
+    R.master.gain.value = level === undefined ? 1.94 * 0.36 : level;      // the level of the slider where it starts
+    R.log = []; held = false;
+    const tick = () => { if (!still) for (let k = 0; k < 2; k++) { step(1 / 60); tl += 1 / 60; clock += 1 / 60; updateFocus(1 / 60); updateCamera(1 / 60); } updateSound(R, oc.currentTime); };
+    for (let k = 1; k * dtA < sec; k++) oc.suspend(k * dtA).then(() => { tick(); oc.resume(); });
+    updateSound(R, 0);
+    R.rendered = oc.startRendering().then(buf => { lastRig = R; return buf; });
+    return R.rendered;
+  }
+
+  /* ---------- music: an ambient soundscape built from the voices of Henrik's Macheno synth ----------
+     Three low drones in D breathe on different cycles, with sparse pentatonic bells over them and a long
+     reverb. It is played live, so it never repeats. The journey moves it from airy bells on the dike to
+     darker, lower pads inside the flock, and a falcon's attack gets a short phrase. */
+  const M_ROOT = 146.83, M_PENTA = [0, 3, 5, 7, 10];      // D3, Macheno's default key; minor pentatonic
+  const M_PATTERNS = [[0], [0, 2], [0, 2, -2], [0, -2], [0, 4, 2], [0, 2, 4], [0, -2, -4], [0, 3, 1], [0, -1, 2]];
+  const mNote = i => { const o = Math.floor(i / 5), st = ((i % 5) + 5) % 5; return M_ROOT * Math.pow(2, (M_PENTA[st] + 12 * o) / 12); };
+  // Macheno timbres: mist (airy bell), bloom (soft glass), dusk (deep pad), slate (dark low pad)
+  const M_TIMBRE = {
+    mist:  { type: 'triangle', cutoff: 1300, sweep: 2600, q: 3, detune: 10, attack: 0.40, decay: 1.5, sustain: 0.62, release: 2.8 },
+    bloom: { type: 'sine',     cutoff: 1000, sweep: 1600, q: 2, detune: 6,  attack: 0.48, decay: 1.7, sustain: 0.72, release: 3.2 },
+    dusk:  { type: 'sawtooth', cutoff: 550,  sweep: 2600, q: 7, detune: 12, attack: 0.22, decay: 1.0, sustain: 0.58, release: 2.2 },
+    slate: { type: 'sine',     cutoff: 380,  sweep: 900,  q: 4, detune: 5,  attack: 0.55, decay: 2.0, sustain: 0.75, release: 3.4 },
+  };
+  const TURN_FROM = 0.30, TURN_SPAN = 0.30;       // turn rates, in radians a second, between which the pad goes from silent to full
+  let musicOn = false, mOut = null, mDry = null, mWet = null, mVib = null, mMeter = null, mSched = 0, mBellAt = 0, mCueAt = 0;
+  const mDrones = [];
+
+  function initMusic() {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const comp = ac.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.knee.value = 18; comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.2;
+    comp.connect(ac.destination);
+    mOut = ac.createGain(); mOut.gain.value = 0; mOut.connect(comp);            // fades with the switch
+    mMeter = ac.createAnalyser(); mMeter.fftSize = 1024; mOut.connect(mMeter);
+    mDry = ac.createGain(); mDry.gain.value = 0.19; mDry.connect(mOut);        // Macheno's master level
+    const n = Math.floor(ac.sampleRate * 3.4), ir = ac.createBuffer(2, n, ac.sampleRate);   // Macheno's reverb: decaying noise in stereo
+    for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6); }
+    const verb = ac.createConvolver(); verb.buffer = ir;
+    const verbOut = ac.createGain(); verbOut.gain.value = 0.6; verb.connect(verbOut); verbOut.connect(mOut);
+    mWet = ac.createGain(); mWet.gain.value = 0.48; mWet.connect(verb);
+    mVib = ac.createOscillator(); mVib.frequency.value = 4.6; mVib.start();
+    mDrones.push(mDrone(mNote(-5), M_TIMBRE.slate, 11.0, 0.30), mDrone(mNote(-2), M_TIMBRE.bloom, 14.3, 0.16), mDrone(mNote(0), M_TIMBRE.slate, 17.9, 0.12));
+  }
+
+  // one note, as Macheno plays a star: two detuned oscillators, a swept lowpass, vibrato
+  function mVoice(freq, tm, at, vel) {
+    const life = tm.attack + tm.decay + tm.release, peak = 0.336 * vel;
+    const f = ac.createBiquadFilter(), g = ac.createGain(), pan = ac.createStereoPanner ? ac.createStereoPanner() : null;
+    f.type = 'lowpass'; f.Q.value = tm.q;
+    f.frequency.setValueAtTime(tm.cutoff, at);
+    f.frequency.linearRampToValueAtTime(tm.cutoff + tm.sweep, at + tm.attack + tm.decay * 0.5);
+    f.frequency.linearRampToValueAtTime(Math.max(tm.cutoff * 0.7, 120), at + life);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.linearRampToValueAtTime(peak, at + tm.attack);
+    g.gain.linearRampToValueAtTime(Math.max(peak * tm.sustain, 0.001), at + tm.attack + tm.decay);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + life);
+    f.connect(g);
+    let end = g;
+    if (pan) { pan.pan.value = (Math.random() * 2 - 1) * 0.6; g.connect(pan); end = pan; }
+    end.connect(mDry); end.connect(mWet);
+    const parts = [f, g, pan];
+    for (const dt of [-tm.detune, tm.detune]) {
+      const o = ac.createOscillator(), depth = ac.createGain();
+      o.type = tm.type; o.frequency.setValueAtTime(freq, at); o.detune.setValueAtTime(dt, at);
+      depth.gain.value = freq * 0.006; mVib.connect(depth); depth.connect(o.frequency);
+      o.connect(f); o.start(at); o.stop(at + life + 0.05);
+      parts.push(o, depth);
+    }
+    setTimeout(() => parts.forEach(q => { try { if (q) q.disconnect(); } catch (e) { /* already gone */ } }), (at - ac.currentTime + life + 0.2) * 1000);
+  }
+
+  // a held tone that breathes: Macheno's drone, with a slow filter wobble
+  function mDrone(freq, tm, cycle, peak) {
+    const base = tm.cutoff + tm.sweep * 0.4;
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = tm.q * 0.6; f.frequency.value = base;
+    const lfo = ac.createOscillator(), depth = ac.createGain();
+    lfo.frequency.value = 0.05 + Math.random() * 0.05; depth.gain.value = base * 0.5;
+    lfo.connect(depth); depth.connect(f.frequency); lfo.start();
+    const g = ac.createGain(); g.gain.value = 0.0001;
+    f.connect(g); g.connect(mDry); g.connect(mWet);
+    for (const dt of [-tm.detune * 0.7, tm.detune * 0.7]) {
+      const o = ac.createOscillator(), vd = ac.createGain();
+      o.type = tm.type; o.frequency.value = freq; o.detune.value = dt;
+      vd.gain.value = freq * 0.004; mVib.connect(vd); vd.connect(o.frequency);
+      o.connect(f); o.start();
+    }
+    return { f, g, base, cycle, peak, next: 0 };
+  }
+  function mBreathe(d, now) {
+    const attack = Math.min(3.2, d.cycle * 0.4), release = Math.min(3.5, d.cycle * 0.4), hold = Math.max(d.cycle - attack - release, 0.05);
+    const g = d.g.gain;
+    g.cancelScheduledValues(now); g.setValueAtTime(Math.max(g.value, 0.0001), now);
+    g.linearRampToValueAtTime(d.peak, now + attack);
+    g.setValueAtTime(d.peak, now + attack + hold);
+    g.linearRampToValueAtTime(d.peak * 0.18, now + attack + hold + release);
+    d.next = now + d.cycle;
+  }
+
+  // Inside the flock the music follows the birds: when they wheel, a long pad note swells in, brighter the
+  // harder the turn, leaning left or right with it, and higher when they climb. A sharp turn starts a phrase.
+  // It fades when the flock flies straight again.
+  const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
+  let mPad = null, mPadNote = 0, mPadOn = false, mTurnHot = false, mTick = 0;
+  function makePad() {
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 4; f.frequency.value = 400;
+    const g = ac.createGain(); g.gain.value = 0;
+    const pan = ac.createStereoPanner ? ac.createStereoPanner() : null;
+    f.connect(g);
+    const end = pan || g; if (pan) g.connect(pan);
+    end.connect(mDry); end.connect(mWet);
+    const oscs = [];
+    for (const [type, det, lvl, sub] of [['sawtooth', -12, 0.5, false], ['sawtooth', 12, 0.5, false], ['sine', 0, 0.8, true]]) {
+      const o = ac.createOscillator(), og = ac.createGain(), vd = ac.createGain();
+      o.type = type; o.detune.value = det; og.gain.value = lvl;
+      mVib.connect(vd); vd.connect(o.frequency); o.connect(og); og.connect(f); o.start();
+      oscs.push({ o, vd, sub });
+    }
+    return { f, g, pan, oscs };
+  }
+  function padPitch(i, now, glide) {
+    const fr = mNote(i);
+    for (const v of mPad.oscs) {
+      const target = v.sub ? fr / 2 : fr;
+      if (glide) v.o.frequency.setTargetAtTime(target, now, 0.25); else v.o.frequency.setValueAtTime(target, now);
+      v.vd.gain.value = target * 0.005;
+    }
+  }
+  function tickPad(now) {
+    const inside = insideAt(tl);                                          // only once you are among the birds
+    const amt = clamp01((turnRate - TURN_FROM) / TURN_SPAN) * inside;
+    if (amt > 0.45 && !mTurnHot) { mTurnHot = true; musicCue(); } else if (amt < 0.2) mTurnHot = false;
+    if (amt > 0) {
+      if (!mPad) mPad = makePad();
+      const i = Math.round(mix(1, 9, clamp01(0.5 + cf[1] * 1.6)));        // climbing lifts the note, diving lowers it
+      if (!mPadOn) { padPitch(i, now, mPad.g.gain.value > 0.01); mPadNote = i; mPadOn = true; }
+      else if (i !== mPadNote) { padPitch(i, now, true); mPadNote = i; }
+      mPad.g.gain.setTargetAtTime(0.18 * Math.sqrt(amt), now, 0.45);      // swells in
+      mPad.f.frequency.setTargetAtTime(420 + 1900 * amt, now, 0.3);       // a harder turn is brighter
+      if (mPad.pan) mPad.pan.pan.setTargetAtTime(turnDir * 0.6, now, 0.5);
+    } else if (mPadOn) {
+      mPadOn = false;
+      mPad.g.gain.setTargetAtTime(0, now, 0.9);                            // fades over about three seconds
+      mPad.f.frequency.setTargetAtTime(300, now, 1.2);
+    }
+  }
+
+  const mJourney = () => sstep((tl - T_RISE) / (T_MERGE + D_MERGE - T_RISE)) * (ending ? 1 - sstep((tl - T_LEAVE) / (T_SINK + D_SINK - T_LEAVE)) : 1);   // 0 on the dike, 1 inside the flock
+  function mPhrase(strong) {
+    const p = mJourney();
+    const tm = p < 0.45 ? M_TIMBRE.mist : p < 0.8 ? M_TIMBRE.bloom : M_TIMBRE.dusk;
+    const start = Math.round(mix(12, 5, p)) - Math.floor(Math.random() * 4);
+    const pat = M_PATTERNS[Math.floor(Math.random() * M_PATTERNS.length)];
+    const soft = (strong ? 1 : 0.7) * (tm === M_TIMBRE.dusk ? 0.55 : 1);
+    let t = ac.currentTime + 0.05;
+    for (const st of pat) {
+      if (!strong && Math.random() < 0.12) { t += 0.2; continue; }
+      mVoice(mNote(start + st), tm, t + Math.random() * 0.03, (0.5 + Math.random() * 0.3) * soft);
+      t += 0.22 + Math.random() * 0.18;
+    }
+  }
+  function tickMusic() {
+    if (!ac || ac.state !== 'running') return;
+    const now = ac.currentTime, p = mJourney();
+    tickPad(now);                      // every 100 ms; the drones and bells every 300 ms
+    if (mTick++ % 3) return;
+    for (const d of mDrones) {
+      if (now >= d.next) mBreathe(d, now);
+      d.f.frequency.setTargetAtTime(d.base * (1 - 0.45 * p), now, 1.5);   // darker once you are among the birds
+    }
+    if (now >= mBellAt) { mPhrase(false); mBellAt = now + 5 + Math.random() * 7; }
+  }
+  // a falcon's attack gets a phrase, never more than one every couple of seconds
+  function musicCue() {
+    if (!musicOn || !ac || ac.state !== 'running') return;
+    const now = ac.currentTime;
+    if (now < mCueAt) return;
+    mCueAt = now + 2.2; mBellAt = Math.max(mBellAt, now + 4);
+    mPhrase(true);
+  }
+  // plays only while switched on and the tab is showing
+  function musicAudible() {
+    if (!mOut) return;
+    const want = musicOn && !document.hidden, t = ac.currentTime, g = mOut.gain;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+    if (want) {
+      if (ac.state !== 'running') ac.resume();
+      g.linearRampToValueAtTime(mLevel(), t + 2.5);
+      if (!mSched) { mTick = 0; tickMusic(); mSched = setInterval(tickMusic, 100); }
+    } else { g.linearRampToValueAtTime(0, t + 0.8); clearInterval(mSched); mSched = 0; }
+  }
+
+  /* ---------- timeline, captions, controls ---------- */
+  const veil = document.getElementById('veil'), titleEl = document.getElementById('title'), capEl = document.getElementById('caption');
+  const soundBtn = document.getElementById('sound'), musicBtn = document.getElementById('music'), replayBtn = document.getElementById('replay');
+  const captions = ['Dusk \u00b7 watching from the dike', 'Leaving the ground', 'Inside the flock · neighbours a metre apart', 'Back to the dike · the light is going', 'Night · the flock drops into the reeds'];
+  let capIdx = 0, capTimer = 0;
+  function setCaption(i) {
+    if (i === capIdx) return; capIdx = i; capEl.classList.add('swap');
+    clearTimeout(capTimer); capTimer = setTimeout(() => { capEl.textContent = captions[i]; capEl.classList.remove('swap'); }, 1200);
+  }
+  // People who have asked for less motion get a still view until they press Play, and then the calm flight:
+  // a level horizon, a narrower view, slower turns of the head and softened edges. It follows the setting if it changes.
+  const motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  const reduced = Q.has('still') ? Q.get('still') === '1' : !!(motionQuery && motionQuery.matches);
+  calm = reduced;
+  if (motionQuery && motionQuery.addEventListener && !Q.has('still')) motionQuery.addEventListener('change', e => { calm = e.matches; });
+  // inline, the page's scroll sets where along the journey the view should be, and the view eases there
+  let tlGoal = -1;
+  // On its own page the evening can be hurried along: scrolling down (or a finger drawn up the sky) carries the journey
+  // forward, two seconds for every hundred pixels, and scrolling up carries it back. Only the journey moves; the birds
+  // fly on at their own pace, so after a long jump the flock may need a moment to be where the hour says.
+  const T_LAST = T_DOWN + D_DOWN + 60;
+  let skip = 0, touchY = null;
+  // the page says so under the caption, until the visitor has done it once
+  const hintEl = document.getElementById('hint');
+  if (window.matchMedia && matchMedia('(pointer: coarse)').matches) hintEl.textContent = 'Swipe up to move through the evening';
+  const hurry = px => { if (!playing) return; skip = Math.max(-tl, Math.min(T_LAST - tl, skip + px * 0.02)); if (Math.abs(px) > 2) hintEl.classList.add('used'); };
+  if (!inline) {
+    addEventListener('wheel', e => { e.preventDefault(); hurry(e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1)); }, { passive: false });
+    canvas.addEventListener('touchstart', e => { touchY = e.touches.length === 1 ? e.touches[0].clientY : null; }, { passive: true });
+    canvas.addEventListener('touchmove', e => { if (touchY === null || e.touches.length !== 1) return; const y = e.touches[0].clientY; hurry((touchY - y) * 2.5); touchY = y; }, { passive: true });
+    canvas.addEventListener('touchend', () => { touchY = null; }, { passive: true });
+  }
+  let playing = !reduced;
+  if (reduced) { replayBtn.textContent = 'Play'; hintEl.classList.add('used'); }      // nothing to scroll through until it plays
+
+  function restart() {
+    veil.classList.add('quick'); veil.classList.remove('clear');
+    setTimeout(() => { if (land > 0) { const a = active, c = copies; resetFlock((Math.random() * 4294967296) | 0); active = a; copies = c; } tl = 0; skip = 0; resetChase(); titleEl.classList.remove('gone'); setCaption(0); playing = true; replayBtn.textContent = 'Replay';
+      veil.classList.remove('quick'); veil.classList.add('clear'); }, 750);
+  }
+  replayBtn.addEventListener('click', () => { if (!playing) { playing = true; replayBtn.textContent = 'Replay'; hintEl.classList.remove('used'); } else restart(); });
+  // volume: each slider runs from silent to about twice the starting level, and remembers where you left it
+  const soundVol = document.getElementById('soundVol'), musicVol = document.getElementById('musicVol');
+  try {
+    const a = localStorage.getItem('sortsol.soundVol'), b = localStorage.getItem('sortsol.musicVol');
+    if (a !== null) soundVol.value = a; if (b !== null) musicVol.value = b;
+  } catch (e) { /* storage unavailable: the sliders just start at their defaults */ }
+  const keep = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* not remembered */ } };
+  function sLevel() { const v = soundVol.value / 100; return 1.94 * v * v; }
+  function mLevel() { const v = musicVol.value / 100; return 1.39 * v * v; }
+  function setSound(on) {
+    if (on && !master) { try { initAudio(); } catch (e) { soundBtn.disabled = soundVol.disabled = true; soundBtn.textContent = 'No sound'; return; } }
+    soundOn = on;
+    if (master) { if (on && ac.state !== 'running') ac.resume(); master.gain.setTargetAtTime(on ? sLevel() : 0, ac.currentTime, 0.4); }
+    soundBtn.setAttribute('aria-pressed', String(on)); soundBtn.textContent = on ? 'Sound on' : 'Sound off';
+  }
+  function setMusic(on) {
+    if (on && !mOut) { try { initMusic(); } catch (e) { musicBtn.disabled = musicVol.disabled = true; musicBtn.textContent = 'No music'; return; } }
+    musicOn = on;
+    musicBtn.setAttribute('aria-pressed', String(on)); musicBtn.textContent = on ? 'Music on' : 'Music off';
+    musicAudible();
+  }
+  soundBtn.addEventListener('click', () => setSound(!soundOn));
+  musicBtn.addEventListener('click', () => setMusic(!musicOn));
+  // moving a slider while its channel is off switches the channel on
+  soundVol.addEventListener('input', () => {
+    keep('sortsol.soundVol', soundVol.value);
+    if (!soundOn) { if (+soundVol.value > 0) setSound(true); }
+    else master.gain.setTargetAtTime(sLevel(), ac.currentTime, 0.08);
+  });
+  musicVol.addEventListener('input', () => {
+    keep('sortsol.musicVol', musicVol.value);
+    if (!musicOn) { if (+musicVol.value > 0) setMusic(true); }
+    else if (!document.hidden) { const t = ac.currentTime, g = mOut.gain; g.cancelScheduledValues(t); g.setTargetAtTime(mLevel(), t, 0.08); }
+  });
+  document.addEventListener('visibilitychange', musicAudible);
+  // The sound plays only while the tab is showing. On coming back it is started again; where the browser will not do
+  // that without a tap (iPhones often will not), the switches show off, so one tap brings it back.
+  function audioBack() {
+    if (!ac) return;
+    if (document.hidden) { if (master) master.gain.setTargetAtTime(0, ac.currentTime, 0.2); return; }
+    if (!soundOn && !musicOn) return;
+    const settle = () => {
+      if (ac.state === 'running') { if (soundOn) master.gain.setTargetAtTime(sLevel(), ac.currentTime, 0.4); }
+      else { if (soundOn) setSound(false); if (musicOn) setMusic(false); }
+    };
+    if (ac.state === 'running') settle();
+    else { let p = null; try { p = ac.resume(); } catch (e) { /* settle shows it off */ } Promise.resolve(p).catch(() => {}).then(() => setTimeout(settle, 400)); }
+  }
+  document.addEventListener('visibilitychange', audioBack);
+  window.addEventListener('pageshow', audioBack);
+  onWave = musicCue;
+
+  let last = performance.now(), ema = 16, slowT = 0, clock = 0, simMs = 0;
+  let held = false, frozen = false;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (held || frozen) { last = now; return; }
+    const raw = now - last; last = now;
+    // A slow screen takes up to three steps a frame, so the flock keeps its real speed down to eight frames a second
+    // (it used to fly in slow motion below thirty). A gap of over half a second is a tab coming back, and counts as no time.
+    let dt = raw > 500 || raw < 0 ? 0 : raw / 1000;
+    const sub = Math.min(3, Math.max(1, Math.ceil(dt * 24 - 1e-3))), h = Math.min(dt / sub, 1 / 24); dt = h * sub;
+    if (playing && dt > 0) {
+      const t0 = performance.now(); for (let k = 0; k < sub; k++) step(h);
+      simMs += ((performance.now() - t0) / sub - simMs) * 0.05; clock += dt;
+      if (tlGoal >= 0) tl += (tlGoal - tl) * (1 - Math.exp(-dt * 4));
+      else { const add = skip * (1 - Math.exp(-dt * 5)); skip -= add; tl = Math.max(0, tl + dt + add); }
+      if (raw < 200) ema += (raw - ema) * 0.05;
+      slowT += dt;
+      if (clock > 3 && slowT > 1.5 && simMs > 8.5 && active > 2000) { active = Math.max(2000, Math.floor(active * 0.85)); slowT = 0; simMs *= 0.8; }
+      else if (clock > 3 && slowT > 1.5 && ema > 27 && copies > 8) { copies -= 2; slowT = 0; ema = 20; }
+      titleEl.classList.toggle('gone', tl > 8.5);
+      setCaption(tl < T_RISE + 1 ? 0 : tl < T_MERGE + 8 ? 1 : !ending || tl < T_LEAVE + 5 ? 2 : tl < T_DOWN + 16 ? 3 : 4);
+    }
+    updateFocus(dt || 1 / 60); updateCamera(dt); draw(clock); updateAudio();
+  }
+  requestAnimationFrame(t => { last = t; veil.classList.add('clear'); frame(t); });
+
+  /* ---------- test hooks ---------- */
+  // Starts the whole evening again from a given seed, so two runs can be compared number for number.
+  function resetFlock(n) {
+    seedState = 20261113; seed2 = n | 0; active = N; copies = COPIES; here.self = -1; here.was = -1; here.mix = 1; here.w = 0;
+    nA = 0; freeG = 0; seedF = 0x2545F491; give[0] = give[1] = give[2] = 0; land = 0; aloft = 1;
+    simT = 0; frameNo = 0; hHead = 0; hAcc = 0; hist.fill(0);
+    lead.x = HOME[0] - 70; lead.y = HOME[1] - 8; lead.z = HOME[2] + 20; lead.dx = 1; lead.dy = 0; lead.dz = 0;
+    for (let i = 0; i < 1300; i++) { simT += H_STEP; leadStep(H_STEP); }
+    bank.fill(0); placeBirds();
+    falcon.on = false; falcon.t = 0; falcon.next = simT + 17;
+    waves.fill(0); for (let i = 0; i < 3; i++) waves[i * 4 + 3] = -1e4; waveIdx = 0; lastWave = -1e4;
+    for (let a = 0; a < 3; a++) { focus[a] = focusSm[a] = [lead.x, lead.y, lead.z][a]; focusDir[a] = a ? 0 : 1; lq[a] = 0; }
+    for (let i = 0; i < 60; i++) step(1 / 60);
+    updateFocus(1); updateFocus(1); focusSm[0] = focus[0]; focusSm[1] = focus[1]; focusSm[2] = focus[2];
+    tl = 0; clock = 0; turnRate = 0; turnDir = 0; repicks = 0; jumps = 0; peak.roll = peak.eye = peak.turn = 0; eyeSp = 0;
+    resetChase(); veil.classList.add('clear');
+  }
+  // Where one copy of one bird is drawn at time t, by the same sums as the bird shader: its place by its parent, its
+  // slow drift near the viewer, and the room the viewer keeps. Inside the bubble of free birds a copy fades out, and
+  // none of the viewer's own bird are drawn.
+  function clonePos(i, c, t, o) {
+    slotOf(i, c, t, o);
+    const sp = Math.hypot(vx[i], vy[i], vz[i]) || 1, hw = here.w * here.on;
+    o.fx = vx[i] / sp; o.fy = vy[i] / sp; o.fz = vz[i] / sp; o.free = false;
+    o.x = px[i] + o.s0; o.y = py[i] + o.s1; o.z = pz[i] + o.s2;
+    o.shown = hw > 0 ? shownAt(Math.hypot(o.x - here.x, o.y - here.y, o.z - here.z), false) : 1;
+    o.hidden = o.shown < 0.5 || (i === here.self ? here.mix : i === here.was ? 1 - here.mix : 0) * hw > 0.5;
+    roomPush(o);
+    return o;
+  }
+  // Where a bird is drawn, copy or free. A bird numbered N or more is a free one.
+  function drawnPos(i, c, t, o) {
+    if (i < N) return clonePos(i, c, t, o);
+    const a = i - N; placeFree(a, o);
+    const sp = Math.hypot(o.vx, o.vy, o.vz) || 1; o.fx = o.vx / sp; o.fy = o.vy / sp; o.fz = o.vz / sp; o.free = true;
+    o.s0 = aD[a * 3]; o.s1 = aD[a * 3 + 1]; o.s2 = aD[a * 3 + 2];
+    o.shown = a < nA ? shownAt(Math.hypot(o.s0, o.s1, o.s2), true) : 0; o.hidden = o.shown < 0.5;
+    return o;
+  }
+  // The free birds: how many, how far the bubble has formed, how fast they move against the viewer and how much they
+  // bank of their own accord, what a step of their flight costs, and (stream) how fast the simulated birds within
+  // ten metres move against the viewer, which is what the copies around the bubble do.
+  function freeStats(on) {
+    if (on !== undefined) freeOn = !!on;
+    let sp = 0, spMax = 0, bk = 0, far = 0, st = 0, sn = 0, stMax = 0, n3 = 0, n5 = 0;
+    for (let a = 0; a < nA; a++) {
+      const a3 = a * 3, v = Math.hypot(aV[a3], aV[a3 + 1], aV[a3 + 2]), r = Math.hypot(aD[a3], aD[a3 + 1], aD[a3 + 2]);
+      sp += v; if (v > spMax) spMax = v; bk += Math.abs(aB[a]); if (r > far) far = r; if (r < 3) n3++; if (r < 5) n5++;
+    }
+    for (let i = 0; i < active; i++) {
+      const dx = px[i] - here.x, dy = py[i] - here.y, dz = pz[i] - here.z; if (dx * dx + dy * dy + dz * dz > 100) continue;
+      const v = Math.hypot(vx[i] - cv[0], vy[i] - cv[1], vz[i] - cv[2]); st += v; sn++; if (v > stMax) stMax = v;
+    }
+    const f3 = v => +v.toFixed(3);
+    return { on: freeOn, n: nA, formed: f3(freeG), radius: RB, farthest: f3(far), in3: n3, in5: n5, drift: nA ? f3(sp / nA) : null, driftMax: f3(spMax), ownBank: nA ? f3(bk / nA) : null,
+      ms: f3(freeMs), give: f3(Math.hypot(give[0], give[1], give[2])), stream: sn ? f3(st / sn) : null, streamMax: f3(stMax), streamBirds: sn };
+  }
+  // The birds as they are drawn within r metres of the eye, copies included: how many, how far each is from its
+  // nearest neighbour, how close the closest comes, and whether any sits ahead of the viewer.
+  function nearField(r) {
+    r = r || 5;
+    const e = cam.eye, R = r + 3, reach = R + 11, pts = [], o = {};
+    for (let i = 0; i < active; i++) {
+      const dx = px[i] - e[0], dy = py[i] - e[1], dz = pz[i] - e[2];
+      if (dx * dx + dy * dy + dz * dz > reach * reach) continue;
+      for (let c = 0; c < copies; c++) {
+        clonePos(i, c, clock, o); if (o.hidden) continue;
+        const d = Math.hypot(o.x - e[0], o.y - e[1], o.z - e[2]);
+        if (d < R) pts.push(o.x, o.y, o.z, d, o.fx, o.fy, o.fz, i, c);
+      }
+    }
+    for (let a = 0; a < nA; a++) {
+      drawnPos(N + a, 0, clock, o); if (o.hidden) continue;
+      const d = Math.hypot(o.x - e[0], o.y - e[1], o.z - e[2]);
+      if (d < R) pts.push(o.x, o.y, o.z, d, o.fx, o.fy, o.fz, N + a, 0);
+    }
+    const W = 9, P = pts.length / W; let n = 0, sum = 0, mn = Infinity, along = 0, cd = Infinity, ci = -1, od = Infinity, oi = -1, ahead = 0, beside = 0, n3 = 0;
+    for (let a = 0; a < P; a++) {
+      const o = a * W, d = pts[o + 3]; if (d >= r) continue;
+      n++; if (d < cd) { cd = d; ci = o; }
+      if (!(pts[o + 7] === follow && pts[o + 8] === 0) && d < od) { od = d; oi = o; }
+      // its bearing from the viewer's heading: cb is 1 dead ahead, 0 beside, -1 behind
+      const cb = ((pts[o] - e[0]) * here.hx + (pts[o + 1] - e[1]) * here.hy + (pts[o + 2] - e[2]) * here.hz) / (d || 1);
+      if (d < 3) { n3++; beside += Math.abs(cb); if (cb > 0.9063) ahead++; }
+      let b2 = Infinity, bx = 0, by = 0, bz = 0;
+      for (let b = 0; b < P; b++) {
+        if (b === a) continue;
+        const q = b * W, x = pts[q] - pts[o], y = pts[q + 1] - pts[o + 1], z = pts[q + 2] - pts[o + 2], d2 = x * x + y * y + z * z;
+        if (d2 < b2) { b2 = d2; bx = x; by = y; bz = z; }
+      }
+      if (b2 < Infinity) { const d = Math.sqrt(b2); sum += d; if (d < mn) mn = d; along += Math.abs(bx * pts[o + 4] + by * pts[o + 5] + bz * pts[o + 6]) / (d || 1); }
+    }
+    const f3 = v => +v.toFixed(3), b = follow, at = q => ({ d: f3(pts[q + 3]), pos: [f3(pts[q]), f3(pts[q + 1]), f3(pts[q + 2])], id: [pts[q + 7], pts[q + 8]] });
+    return { r, n, perM3: f3(n / (4.18879 * r * r * r)), nnMean: n ? f3(sum / n) : null, nnMin: n ? f3(mn) : null,
+      nnAlong: n ? f3(along / n) : null,            // 0.5 if the nearest neighbour sat in any direction; lower means beside, not ahead or behind
+      closest: ci < 0 ? null : at(ci),             // of all drawn birds, the viewer's own included (it flies just behind the eye)
+      other: oi < 0 ? null : at(oi),               // the closest that is not the viewer's own bird
+      within3: n3, ahead25: ahead,                 // birds within 3 m of the eye (when r is at least 3), and those of them within 25 degrees of dead ahead
+      aheadness: n3 ? f3(beside / n3) : null,      // 0.5 if birds within 3 m sat in any direction from the viewer; lower means beside it
+      room: [f3(here.side), f3(here.ahead), f3(here.w * here.on)],
+      eye: e.map(f3), followed: [f3(px[b]), f3(py[b]), f3(pz[b])] };
+  }
+
+  window.sortSol = { seek: t => { tl = t; },
+    // for the page around an inline scene: the journey's goal (snap: go there at once) and its length in seconds
+    scrub: (t, snap) => { tlGoal = Math.max(0, t); if (snap) tl = tlGoal; }, journey: T_MERGE + D_MERGE,
+    still: () => !playing,
+    stats: () => ({ active, copies, birds: active * copies, ema, tl, simMs, turnRate, turnDir, climb: cf[1], pad: mPad ? mPad.g.gain.value : null,
+      roll, eyeSpeed: eyeSp, near50, near30, repicks, jumps, calm, shade, lookLead, fov: cam.fov, peak: { roll: peak.roll, eye: peak.eye, turn: peak.turn } }),
+    seed: n => { resetFlock(n); draw(clock); return n; }, hold: on => { frozen = on !== false; return frozen; }, near: nearField,
+    calm: on => { if (on !== undefined) calm = !!on; return calm; },
+    field: () => { senseFlock(); return nodes.map(n => ({ w: +n.w.toFixed(3), a: +n.a.toFixed(2) })); },
+    soundLevel: rendered => { const R = rendered ? lastRig : rig || lastRig; if (!R) return null; let rms = null; if (rig && sMeter) { const b = new Float32Array(sMeter.fftSize); sMeter.getFloatTimeDomainData(b); let q = 0; for (const v of b) q += v * v; rms = Math.sqrt(q / b.length); }
+      return { rms, log: R.log || null, air: +R.air.toFixed(2), within30: +R.n30.toFixed(3), surge: +R.surge.toFixed(2), surgePeak: +R.peak.toFixed(2),
+        voices: R.voices.map(v => ({ live: v.live, lvl: +v.lvl.toFixed(3), surge: +v.s.toFixed(2), effort: v.node ? +v.node.a.toFixed(2) : null, d: +Math.hypot(v.x - cam.eye[0], v.y - cam.eye[1], v.z - cam.eye[2]).toFixed(0), gain: +v.g.gain.value.toFixed(3) })),
+        near: R.near.filter(v => v.i >= 0).map(v => ({ bird: [v.i, v.c], d: +v.d.toFixed(2), pan: +v.p.toFixed(2), level: +v.lvl.toFixed(3), hz: +v.hz.toFixed(1) })) }; },
+    mix: o => { if (o) for (const k in SND) if (o[k] !== undefined) SND[k] = +o[k]; return Object.assign({}, SND); },
+    musicLevel: () => { if (!mMeter) return null; const b = new Float32Array(mMeter.fftSize); mMeter.getFloatTimeDomainData(b); let q = 0; for (const v of b) q += v * v; return { rms: Math.sqrt(q / b.length), state: ac.state, gain: mOut.gain.value, on: musicOn, soundGain: master ? master.gain.value : null, soundOn }; },
+    peek: (e, t, fov, time) => { let fx = t[0] - e[0], fy = t[1] - e[1], fz = t[2] - e[2]; const fl = Math.hypot(fx, fy, fz); fx /= fl; fy /= fl; fz /= fl;
+      let rx = -fz, rz = fx; const rl = Math.hypot(rx, rz); rx /= rl; rz /= rl;
+      cam.eye = e; cam.f = [fx, fy, fz]; cam.r = [rx, 0, rz]; cam.u = [-rz * fy, rz * fx - rx * fz, rx * fy]; cam.fov = fov || 40; held = true; draw(time === undefined ? clock : time); },
+    room: on => { if (on !== undefined) here.on = on ? 1 : 0; return { on: here.on, side: here.side, ahead: here.ahead, inside: here.w, self: here.self }; },
+    clone: (i, c) => { const o = drawnPos(i, c, clock, {}); return { pos: [o.x, o.y, o.z], off: [o.s0, o.s1, o.s2], hidden: o.hidden, free: o.free }; },
+    free: freeStats,
+    // the evening's end: on or off (off, the flight inside goes on until Replay), how far the flock has been called down, and the share of birds still in the air
+    ending: on => { if (on !== undefined) ending = !!on; return { on: ending, land: +land.toFixed(3), aloft: +aloft.toFixed(3), leader: +lead.y.toFixed(1), leave: T_LEAVE, down: [T_DOWN, T_DOWN + D_DOWN] }; },
+    air: o => { if (o) { if (o.far !== undefined) air.far = +o.far; if (o.haze !== undefined) air.haze = +o.haze; } return Object.assign({}, air); },
+    falcon: () => ({ on: falcon.on, at: [falcon.x, falcon.y, falcon.z].map(v => +v.toFixed(1)), v: [falcon.vx, falcon.vy, falcon.vz].map(v => +v.toFixed(1)), fromViewer: +Math.hypot(falcon.x - here.x, falcon.y - here.y, falcon.z - here.z).toFixed(1), sinceStrike: +(simT - lastWave).toFixed(2) }),
+    // the wave a turn makes among the free birds: its speed in m/s, the time it takes to cross the bubble, and what it adds just now to the bank of the bird furthest ahead and furthest behind
+    turnWave: o => { if (o && o.speed) turn.speed = +o.speed; let fa = -1, fb = -1, ma = -1e9, mb = 1e9; for (let a = 0; a < nA; a++) { const al = aD[a * 3] * here.hx + aD[a * 3 + 1] * here.hy + aD[a * 3 + 2] * here.hz; if (al > ma) { ma = al; fa = a; } if (al < mb) { mb = al; fb = a; } }
+      const o1 = {}, o2 = {}; if (fa >= 0) { turnAt(fa * 3, o1); turnAt(fb * 3, o2); }
+      return { speed: turn.speed, across: +(2 * RB / turn.speed).toFixed(3), ahead: fa < 0 ? null : { m: +ma.toFixed(2), bank: +o1.tb.toFixed(3), turn: +Math.hypot(o1.tx, o1.ty, o1.tz).toFixed(3) }, behind: fb < 0 ? null : { m: +mb.toFixed(2), bank: +o2.tb.toFixed(3), turn: +Math.hypot(o2.tx, o2.ty, o2.tz).toFixed(3) }, viewerBank: +camBank.toFixed(3) }; },
+    renderSound,
+    wings: o => { if (o) { if (o.still !== undefined) wingStill = +o.still; if (o.blur !== undefined) wingShut = +o.blur; } return { still: wingStill, blur: wingShut }; },
+    advance: sec => { held = false; const n = Math.round(sec * 60); for (let i = 0; i < n; i++) { step(1 / 60); tl += 1 / 60; clock += 1 / 60; updateFocus(1 / 60); updateCamera(1 / 60); } draw(clock); return tl; } };
+})();
+</script>
+
+<script>
+  // shown inside attabird.com: Esc hands control back to the page
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && parent !== window) parent.postMessage('sortsol:close', location.origin); });
+</script>
+</body></html>
