@@ -4,7 +4,7 @@ Flying inside a murmuration of starlings at dusk over the marsh at Ribe, Denmark
 
 **Live:** https://www.attabird.com/sortsol
 
-Sort sol means "black sun". It's what we call it in Denmark when huge flocks of starlings gather over the marshes at dusk and darken the sky. I grew up in Ribe, Denmark's oldest town, on the west coast, where you can see it every spring and autumn. My father used to play the organ in Ribe Cathedral, and the cathedral is on the horizon behind you.
+Sort sol means "black sun". It's what we call it in Denmark when hundreds of thousands of starlings gather over the marshes at dusk and darken the sky. I grew up in Ribe, Denmark's oldest town, on the west coast, where you can see it every spring and autumn. My father used to play the organ in Ribe Cathedral, and the cathedral is on the horizon behind you.
 
 You start on the dike and watch the flock. Then you fly into it and become one of the birds. After about three minutes the evening ends and the flock pours into the reeds.
 
