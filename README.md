@@ -20,7 +20,7 @@ One self-contained HTML file. WebGL 2, Web Audio and plain JavaScript, no librar
 - **One bird's flight.** Wing strokes with glides and bounds, a nose-up body and a level horizon.
 - **Sound.** All of it is generated live with Web Audio: wind by airspeed, the rush of the flock, the wings of the nearest birds, music that swells when the flock wheels, and chatter in the roost. No audio files.
 
-Click or tap the flock to startle it: the falcon's escape wave runs out from the bird you hit. The view follows your mouse a little, and scrolling speeds up the evening. With reduced motion turned on, the flight is calmer.
+Click or tap the flock to startle it: the birds burst away from the spot, as when a falcon strikes, and the hole closes again over a couple of seconds. The view follows your mouse a little, and scrolling speeds up the evening. With reduced motion turned on, the flight is calmer.
 
 ## Running it
 
