@@ -278,6 +278,7 @@
     uniform vec4 uHere, uSelf;           // the viewer: where it flies and how far inside it is; its own bird (seed now, seed before, how far changed)
     uniform vec3 uHead; uniform vec4 uKeep;   // its heading; the room it keeps (metres to the side, metres ahead), and the bubble of free birds around it (radius, how far it has formed)
     uniform vec4 uWave[3];
+    uniform vec4 uScare;                 // where a click startled the flock, and when
     out float vA; out vec3 vCol;
     void main(){
       vec3 f0 = normalize(iVel.xyz);
@@ -331,6 +332,29 @@
         }
       }
       c += r0 * slip * 0.5 * mix(1.0, smoothstep(2.0, 6.0, distance(c, uHere.xyz)), uHere.w);
+      // Flash expansion. Where a click startles the flock, the birds burst away from the spot, as filmed flocks do when a
+      // falcon strikes, so a hole opens in a third of a second and closes again over two and a half. Its shape is for
+      // the eye, not from a measurement: the birds are pushed across the line of sight from the viewer through the spot,
+      // not straight out, so the birds in front and behind don't fill the hole, and the hole is the same size on screen
+      // near or far (birds within six to eleven degrees of the line go, about half that when the spot is 300 m off), so it reads from the dike and doesn't empty
+      // the sky inside the flock. The birds right beside the viewer keep their distance.
+      float sa = uSimT - uScare.w;
+      if (sa > 0.0 && sa < 3.0) {
+        vec3 vd = normalize(uScare.xyz - uCam), q = c - uCam;
+        float depth = dot(q, vd);
+        vec3 qp = q - depth * vd;
+        float rho = length(qp);
+        if (depth > 0.5 && rho > 1e-4) {
+          // each bird flees its own amount and reacts from its own distance, so the edge comes out ragged, not a ring
+          // smaller when the spot is far off, where the whole flock is only a few dozen degrees across
+          float far = mix(1.0, 0.6, smoothstep(80.0, 300.0, distance(uCam, uScare.xyz)));
+          float jit = fract(iSeed.w * 13.7 + uCopy * 0.61), A = 0.15 * far * (0.75 + 0.5 * fract(iSeed.z * 7.3 + uCopy * 0.37));
+          float ang = rho / depth;
+          float burst = smoothstep(0.0, 0.35, sa) * (1.0 - smoothstep(0.5, 3.0, sa)) * (1.0 - smoothstep(0.0, A, ang));
+          c += qp / rho * (0.5 + 0.6 * jit) * A * depth * burst * mix(1.0, smoothstep(2.0, 6.0, distance(c, uHere.xyz)), uHere.w);
+          b += 0.9 * burst * sign(dot(qp, r0));      // and bank away from it
+        }
+      }
       vec3 r = r0 * cos(b) - u0 * sin(b);
       vec3 u1 = cross(r, f0);
       // a starling flies with its body tilted nose-up (8.8 degrees, measured in a wind tunnel at 12 m/s)
@@ -761,27 +785,32 @@
   const waves = new Float32Array(12); for (let i = 0; i < 3; i++) waves[i * 4 + 3] = -1e4;
   let waveIdx = 0, lastWave = -1e4, onWave = null;
 
-  // A click or a tap on the flock startles it, as a falcon would: the same escape wave (three pulses, each weaker than
-  // the last) runs out from the bird nearest the spot. nx, ny run from -1 to 1 across the sky, y up. The bird is the
-  // simulated one closest to the line of sight, within about two and a half degrees of it; empty sky startles nobody.
-  // At most one startle every 1.2 seconds, so a burst of clicks can't wipe out a falcon's wave still running.
+  // A click or a tap on the flock startles it, as a falcon would: the birds burst away from the spot (the flash
+  // expansion in the bird shader) and the same escape wave (three pulses, each weaker than the last) runs out from it.
+  // nx, ny run from -1 to 1 across the sky, y up. The spot is on the line of sight, as deep as the simulated bird
+  // closest to that line, within eight degrees of it: only one drawn bird in twenty is simulated, so a tighter catch
+  // misses most clicks inside the flock. Empty sky startles nobody. At most one startle every 1.2 seconds, so a burst
+  // of clicks can't wipe out a falcon's wave still running.
   let startleAt = -1e4;
+  const scare = new Float32Array([0, 0, 0, -1e4]);      // read by the bird shader: the flash expansion at the spot
   function startle(nx, ny) {
     if (simT - startleAt < 1.2) return false;
     const aspect = (canvas.clientWidth || 1) / (canvas.clientHeight || 1), t = Math.tan(cam.fov * Math.PI / 360);
     const { eye: e, r, u, f: fw } = cam, sx = nx * aspect * t, sy = ny * t;
     let dx = fw[0] + r[0] * sx + u[0] * sy, dy = fw[1] + r[1] * sx + u[1] * sy, dz = fw[2] + r[2] * sx + u[2] * sy;
     const dl = Math.hypot(dx, dy, dz) || 1; dx /= dl; dy /= dl; dz /= dl;
-    let best = -1, bs = 0.045 * 0.045;      // tan² of the angle off the line of sight
+    let best = -1, bs = 0.14 * 0.14, depth = 0;      // tan² of the angle off the line of sight
     for (let i = 0; i < active; i++) {
       const qx = px[i] - e[0], qy = py[i] - e[1], qz = pz[i] - e[2], a = qx * dx + qy * dy + qz * dz;
       if (a < 0.5) continue;
       const s = (qx * qx + qy * qy + qz * qz - a * a) / (a * a);
-      if (s < bs) { bs = s; best = i; }
+      if (s < bs) { bs = s; best = i; depth = a; }
     }
     if (best < 0) return false;
-    waves[waveIdx * 4] = px[best]; waves[waveIdx * 4 + 1] = py[best]; waves[waveIdx * 4 + 2] = pz[best]; waves[waveIdx * 4 + 3] = simT;
+    const sx3 = e[0] + dx * depth, sy3 = e[1] + dy * depth, sz3 = e[2] + dz * depth;
+    waves[waveIdx * 4] = sx3; waves[waveIdx * 4 + 1] = sy3; waves[waveIdx * 4 + 2] = sz3; waves[waveIdx * 4 + 3] = simT;
     waveIdx = (waveIdx + 1) % 3; startleAt = simT;
+    scare[0] = sx3; scare[1] = sy3; scare[2] = sz3; scare[3] = simT;
     if (onWave) onWave();
     return true;
   }
@@ -1287,7 +1316,7 @@
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     const B = birdProg.u; gl.useProgram(birdProg.p);
     gl.uniformMatrix4fv(B.uVP, false, VP); gl.uniform3fv(B.uCam, cam.eye); gl.uniform3fv(B.uSun, SUN);
-    gl.uniform1f(B.uTime, time); gl.uniform1f(B.uSimT, simT); gl.uniform4fv(B['uWave[0]'], waves);
+    gl.uniform1f(B.uTime, time); gl.uniform1f(B.uSimT, simT); gl.uniform4fv(B['uWave[0]'], waves); gl.uniform4fv(B.uScare, scare);
     gl.uniform1f(B.uPx, h / (2 * tanH));
     gl.uniform1f(B.uSize, 0.4); gl.uniform1f(B.uSpread, 5.0); gl.uniform1f(B.uFar, 0.8 + (air.far - 0.8) * here.w); gl.uniform1f(B.uAir, air.haze * here.w); gl.uniform1f(B.uLand, land > 0 ? 1 : 0);
     gl.uniform1f(B.uStar, 1); gl.uniform1f(B.uShut, wingShut);
@@ -1969,7 +1998,7 @@
     for (let i = 0; i < 1300; i++) { simT += H_STEP; leadStep(H_STEP); }
     bank.fill(0); placeBirds();
     falcon.on = false; falcon.t = 0; falcon.next = simT + 17; falcon.reach = -1;
-    waves.fill(0); for (let i = 0; i < 3; i++) waves[i * 4 + 3] = -1e4; waveIdx = 0; lastWave = -1e4;
+    waves.fill(0); for (let i = 0; i < 3; i++) waves[i * 4 + 3] = -1e4; waveIdx = 0; lastWave = -1e4; scare[3] = -1e4; startleAt = -1e4;
     for (let a = 0; a < 3; a++) { focus[a] = focusSm[a] = [lead.x, lead.y, lead.z][a]; focusDir[a] = a ? 0 : 1; lq[a] = 0; }
     for (let i = 0; i < 60; i++) step(1 / 60);
     updateFocus(1); updateFocus(1); focusSm[0] = focus[0]; focusSm[1] = focus[1]; focusSm[2] = focus[2];
