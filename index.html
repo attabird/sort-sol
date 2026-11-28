@@ -275,16 +275,24 @@
     layout(location=3) in vec4 iSeed;
     uniform mat4 uVP; uniform vec3 uCam, uSun;
     uniform float uTime, uSimT, uPx, uCopy, uSize, uSpread, uMinPx, uFar, uAlpha, uHaze, uStar, uStill, uShut, uFree, uAir, uLand;
+    uniform float uFat;                  // the falcon only: how much thicker it is drawn when far, so seen edge-on it is not a hairline
     uniform vec4 uHere, uSelf;           // the viewer: where it flies and how far inside it is; its own bird (seed now, seed before, how far changed)
     uniform vec3 uHead; uniform vec4 uKeep;   // its heading; the room it keeps (metres to the side, metres ahead), and the bubble of free birds around it (radius, how far it has formed)
     uniform vec4 uWave[3];
-    uniform vec4 uScare;                 // where a click startled the flock, and when
+    uniform vec4 uScare;                 // where a click (or the falcon) startled the flock, and when
+    uniform float uScareR;               // how wide that hole opens: 1 for a click, smaller round the falcon
     out float vA; out vec3 vCol;
+    // Where a copy sits around its parent: a hash of the parent's seed, the copy and the axis, each copy on its own.
+    // (It used to step by the same amount from copy to copy, which set runs of copies in straight, evenly spaced rows:
+    // starlings keep a metre from their neighbours, mostly to the side, and never fly in files like that.)
+    // Integer sums, so the page's own copy of them (copyAt) lands on the same spot exactly.
+    uint hsh(uint x) { x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16; return x; }
+    float copyAt(float sd, float c, uint ax) { return float(hsh(uint(sd * 16777216.0) ^ hsh(uint(c) * 3u + ax + 1u)) >> 8) / 16777216.0; }
     void main(){
       vec3 f0 = normalize(iVel.xyz);
       vec3 r0 = normalize(cross(f0, vec3(0.0, 1.0, 0.0)));
       vec3 u0 = cross(r0, f0);
-      vec3 s = fract(iSeed.xyz * (1.0 + uCopy * 1.618) + uCopy * 0.37) - 0.5;
+      vec3 s = vec3(copyAt(iSeed.x, uCopy, 0u), copyAt(iSeed.y, uCopy, 1u), copyAt(iSeed.z, uCopy, 2u)) - 0.5;
       float copy = min(uCopy, 1.0), shownHere = 1.0;
       // A copy keeps its place from its parent by the compass, not by the parent's heading. So in a turn it flies the
       // arc its parent flies, a little to one side, and does not swing round it like a spoke: measured flocks turn on
@@ -348,10 +356,13 @@
           // each bird flees its own amount and reacts from its own distance, so the edge comes out ragged, not a ring
           // smaller when the spot is far off, where the whole flock is only a few dozen degrees across
           float far = mix(1.0, 0.6, smoothstep(80.0, 300.0, distance(uCam, uScare.xyz)));
-          float jit = fract(iSeed.w * 13.7 + uCopy * 0.61), A = 0.15 * far * (0.75 + 0.5 * fract(iSeed.z * 7.3 + uCopy * 0.37));
+          // and the hole is lobed, not round: wider on some sides than others, a different shape each time
+          vec3 ax1 = normalize(cross(vd, vec3(0.0, 1.0, 0.0)) + vec3(1e-4, 0.0, 0.0)), ax2 = cross(ax1, vd);
+          float th = atan(dot(qp, ax2), dot(qp, ax1)), lobe = 1.0 + 0.3 * sin(3.0 * th + uScare.w * 1.7) + 0.15 * sin(5.0 * th + uScare.w * 3.1);
+          float jit = fract(iSeed.w * 13.7 + uCopy * 0.61), A = 0.15 * uScareR * far * lobe * (0.75 + 0.5 * fract(iSeed.z * 7.3 + uCopy * 0.37));
           float ang = rho / depth;
           float burst = smoothstep(0.0, 0.35, sa) * (1.0 - smoothstep(0.5, 3.0, sa)) * (1.0 - smoothstep(0.0, A, ang));
-          c += qp / rho * (0.5 + 0.6 * jit) * A * depth * burst * mix(1.0, smoothstep(2.0, 6.0, distance(c, uHere.xyz)), uHere.w);
+          c += qp / rho * (0.2 + 0.9 * jit) * A * depth * burst * mix(1.0, smoothstep(2.0, 6.0, distance(c, uHere.xyz)), uHere.w);
           b += 0.9 * burst * sign(dot(qp, r0));      // and bank away from it
         }
       }
@@ -399,7 +410,7 @@
         blur = l * abs(cp) * 0.52 * rate * (1.0 - 0.35 * cos(p0)) * amp * (1.0 - rest) * (1.0 - still) * uShut;
         blur = mix(mix(1.0, 0.8, amp * step(k, 1.001)), max(0.15, 0.03 / (0.03 + blur)), close);
       }
-      vec3 wp = c + (r * lp.x + u * lp.y + f * lp.z) * uSize * k;
+      vec3 wp = c + (r * lp.x + u * lp.y * (1.0 + uFat * clamp(k - 1.0, 0.0, 1.0)) + f * lp.z) * uSize * k;
       gl_Position = shownHere <= 0.0 ? vec4(0.0, 0.0, 3.0, 1.0) : uVP * vec4(wp, 1.0);
       vec3 N = normalize(r * ln.x + u * ln.y + f * ln.z);
       vec3 V = uCam - wp; float lens = length(V); V /= lens;
@@ -530,6 +541,9 @@
      They keep their places by the compass, so in a turn each flies its own arc of the same radius and the neighbours
      swing round the viewer, as measured. Over the outer two metres of the bubble they fade out and the copies fade in. */
   const fr = v => { v = Math.fround(v); return v - Math.floor(v); };
+  // the bird shader's copyAt and hsh: where copy c sits on axis ax, from 0 to 1
+  const hsh = x => { x ^= x >>> 16; x = Math.imul(x, 0x7feb352d); x ^= x >>> 15; x = Math.imul(x, 0x846ca68b); x ^= x >>> 16; return x >>> 0; };
+  const copyAt = (sd, c, ax) => (hsh((Math.floor(sd * 16777216) ^ hsh(c * 3 + ax + 1)) >>> 0) >>> 8) / 16777216;
   const FREE = small ? 250 : 500, RB = 7.5, RB_EDGE = 2;              // how many fly free; the bubble's radius, m; the band where they give way to the copies
   const R_SEP = 0.8, SEP_LONG = 1.5, CORE = 0.38;                     // room a bird keeps to the side, how much more ahead and behind, and the distance nobody comes inside
   const K_SEP = 8, K_AL = 1.0, K_CO = 0.03, K_CAR = 0.5, K_WALL = 4, K_ROOM = 14, A_FREE = 8;
@@ -564,8 +578,8 @@
   // Where copy c of bird i belongs, from its parent: its fixed place, and near the viewer a slow drift of its own
   // (the same sums as in the bird shader).
   function slotOf(i, c, t, o) {
-    const s4 = i * 4, m = 1 + c * 1.618, a0 = c * 0.37, k = c ? 1 : 0;
-    let s0 = (fr(seeds[s4] * m + a0) - 0.5) * 10.5 * k, s1 = (fr(seeds[s4 + 1] * m + a0) - 0.5) * 6.5 * k * (land > 0 ? Math.min(1, Math.max(0, (py[i] - 2) / 12)) : 1), s2 = (fr(seeds[s4 + 2] * m + a0) - 0.5) * 10.5 * k;
+    const s4 = i * 4, k = c ? 1 : 0;
+    let s0 = (copyAt(seeds[s4], c, 0) - 0.5) * 10.5 * k, s1 = (copyAt(seeds[s4 + 1], c, 1) - 0.5) * 6.5 * k * (land > 0 ? Math.min(1, Math.max(0, (py[i] - 2) / 12)) : 1), s2 = (copyAt(seeds[s4 + 2], c, 2) - 0.5) * 10.5 * k;
     const hw = here.w * here.on;
     if (c && hw > 0) {
       const dx = px[i] + s0 - here.x, dy = py[i] + s1 - here.y, dz = pz[i] + s2 - here.z, d2 = dx * dx + dy * dy + dz * dz;
@@ -778,10 +792,12 @@
   placeBirds();
 
   const focus = [lead.x, lead.y, lead.z], focusSm = [lead.x, lead.y, lead.z], focusDir = [1, 0, 0];
-  const falcon = { on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 1, t: 0, next: simT + 17, reach: -1, ax: 0, ay: 0, az: 0, near: 1e9 };
+  const falcon = { on: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 1, t: 0, next: simT + 17, reach: -1, ax: 0, ay: 0, az: 0, near: 1e9, mine: false, seen: '' };
   // The falcon: its speed (attacks are cited at 11 to 15 m/s), how long it presses in once birds flee it, and the
   // least and the spread of the pause between its visits, in seconds.
   const HUNT = { speed: 15, press: 2.5, gap: 30, gapMore: 20 };
+  const FALCON_HOLE = 0.45;      // the hole round it, against a click's (1)
+  const FALCON_SPAN = 1.0;      // its wingspan in metres as drawn (a peregrine's is about a metre)
   const waves = new Float32Array(12); for (let i = 0; i < 3; i++) waves[i * 4 + 3] = -1e4;
   let waveIdx = 0, lastWave = -1e4, onWave = null;
 
@@ -793,6 +809,7 @@
   // of clicks can't wipe out a falcon's wave still running.
   let startleAt = -1e4;
   const scare = new Float32Array([0, 0, 0, -1e4]);      // read by the bird shader: the flash expansion at the spot
+  let scareR = 1;                                        // and how wide it opens
   function startle(nx, ny) {
     if (simT - startleAt < 1.2) return false;
     const aspect = (canvas.clientWidth || 1) / (canvas.clientHeight || 1), t = Math.tan(cam.fov * Math.PI / 360);
@@ -810,12 +827,12 @@
     const sx3 = e[0] + dx * depth, sy3 = e[1] + dy * depth, sz3 = e[2] + dz * depth;
     waves[waveIdx * 4] = sx3; waves[waveIdx * 4 + 1] = sy3; waves[waveIdx * 4 + 2] = sz3; waves[waveIdx * 4 + 3] = simT;
     waveIdx = (waveIdx + 1) % 3; startleAt = simT;
-    scare[0] = sx3; scare[1] = sy3; scare[2] = sz3; scare[3] = simT;
+    scare[0] = sx3; scare[1] = sy3; scare[2] = sz3; scare[3] = simT; scareR = 1;
     if (onWave) onWave();
     return true;
   }
 
-  // The falcon comes from above and makes for the near edge of the flock's main body, not its middle: it flies at the
+  // The falcon makes for the near edge of the flock's main body, not its middle: it flies at the
   // nearest bird of those within 70 m of where the flock is thickest (one in four is looked at; the long thin tail is
   // left alone), and at where that bird will be when it gets there. When birds begin to flee it presses in for a
   // moment, then pulls up and away. An attack that has not reached the flock in 16 seconds is given up.
@@ -823,8 +840,23 @@
     const f = falcon, SP = HUNT.speed;
     if (!f.on) {
       if (simT > f.next && land <= 0) {      // no falcon comes once the flock is going down
-        const a = rnd2() * 6.283;
-        f.x = focus[0] + Math.cos(a) * 190; f.y = focus[1] + 35 + rnd2() * 45; f.z = focus[2] + Math.sin(a) * 190;
+        // It comes in from one side of the view, as deep as the flock and a little above its middle, so it crosses the
+        // sky you are looking at on its way to the flock's edge (from a random side it was mostly off screen, and high up it
+        // was a dark bird on the darkest sky). Inside the flock you fly on past a point to the side, so there it comes from
+        // nearly straight ahead; and while the flock wheels, from the edge of the view the turn swings toward, so the turn
+        // carries it across. It starts in open sky, at least 110 m from where the flock is thickest and 70 m from any bird
+        // (40 m inside), further along the line of sight if need be, and at least 30 m up.
+        const inFlock = here.w > 0.5, turning = inFlock && turnRate > 0.15;
+        const side = turning ? (turnDir >= 0 ? 1 : -1) : rnd2() < 0.5 ? -1 : 1, t = Math.tan(cam.fov * Math.PI / 360), asp = (canvas.clientWidth || 1) / (canvas.clientHeight || 1);
+        const wide = 1 - 0.75 * here.w, sx = side * (turning ? 0.8 + 0.15 * rnd2() : (0.65 + 0.25 * rnd2()) * wide) * asp * t, sy = (0.1 + 0.2 * rnd2()) * t, e = cam.eye;
+        let ux = cam.f[0] + cam.r[0] * sx + cam.u[0] * sy, uy = cam.f[1] + cam.r[1] * sx + cam.u[1] * sy, uz = cam.f[2] + cam.r[2] * sx + cam.u[2] * sy;
+        const ul = Math.hypot(ux, uy, uz); ux /= ul; uy /= ul; uz /= ul;
+        let D = Math.max(60, Math.hypot(focus[0] - e[0], focus[1] - e[1], focus[2] - e[2]));
+        const clear = (x, y, z) => { if (Math.hypot(x - focus[0], y - focus[1], z - focus[2]) < 110) return false;
+          for (let i = 0; i < active; i += 8) { const a = px[i] - x, b = py[i] - y, c = pz[i] - z; if (a * a + b * b + c * c < (inFlock ? 1600 : 4900)) return false; } return true; };
+        for (let i = 0; i < 40 && !clear(e[0] + ux * D, Math.max(e[1] + uy * D, 30), e[2] + uz * D); i++) D += 15;
+        f.x = e[0] + ux * D; f.y = Math.max(e[1] + uy * D, 30); f.z = e[2] + uz * D;
+        f.mine = inFlock; f.seen = '';
         const dx = focus[0] - f.x, dy = focus[1] - f.y, dz = focus[2] - f.z, l = Math.hypot(dx, dy, dz);
         f.vx = dx / l * SP; f.vy = dy / l * SP; f.vz = dz / l * SP; f.on = true; f.t = 0; f.reach = -1;
         f.ax = focus[0]; f.ay = focus[1]; f.az = focus[2];
@@ -832,13 +864,16 @@
       return;
     }
     f.t += dt;
-    let nd = 1e12, nb = -1, ad = 1e12, ab = 0;
+    let nd = 1e12, nb = -1, ad = 1e12, ab = 0, hd = 1e12, hb = -1;
     for (let i = 0; i < active; i += 4) {
       const dx = px[i] - f.x, dy = py[i] - f.y, dz = pz[i] - f.z, d = dx * dx + dy * dy + dz * dz;
       if (d < ad) { ad = d; ab = i; }
       if (d < nd) { const cx = px[i] - focus[0], cy = py[i] - focus[1], cz = pz[i] - focus[2]; if (cx * cx + cy * cy + cz * cz < 4900) { nd = d; nb = i; } }
+      if (f.mine) { const hx = px[i] - here.x, hy = py[i] - here.y, hz = pz[i] - here.z, h = hx * hx + hy * hy + hz * hz; if (h > 36 && h < hd) { hd = h; hb = i; } }
     }
     if (nb < 0) { nb = ab; nd = ad; }
+    // inside the flock it goes for a bird a few metres from you, so it passes nearer and the escape starts among your neighbours
+    if (f.mine && hb >= 0) { nb = hb; nd = ((px[hb] - f.x) ** 2 + (py[hb] - f.y) ** 2 + (pz[hb] - f.z) ** 2); }
     nd = Math.sqrt(nd); f.near = nd;
     if (f.reach < 0 && nd < 32) f.reach = f.t;
     const k = 1.6 * dt;
@@ -856,7 +891,24 @@
     if (f.y < 14) { f.y = 14; f.vy = Math.abs(f.vy) * 0.3; }
     // the birds nearest the falcon start an escape wave that runs through the flock
     if (nd < 40 && simT - lastWave > 4.2) { waves[waveIdx * 4] = f.x; waves[waveIdx * 4 + 1] = f.y; waves[waveIdx * 4 + 2] = f.z; waves[waveIdx * 4 + 3] = simT; waveIdx = (waveIdx + 1) % 3; lastWave = simT; if (onWave) onWave(); }
+    // The flock bursts open around it, as round a click (the flash expansion in the bird shader), and the hole moves
+    // with it while it presses in: the vacuole filmed round falcons in Rome. Held open until it pulls away, then it
+    // closes over two and a half seconds. The simulated birds already swerve from it, but each is drawn as many copies
+    // spread round it, so on their own they make only a faint dent. A click in the last three seconds keeps its own hole.
+    if (f.reach >= 0 && f.t - f.reach < HUNT.press + 0.5 && simT - startleAt > 3) {
+      scare[0] = f.x; scare[1] = f.y; scare[2] = f.z; scareR = FALCON_HOLE;
+      const sa = simT - scare[3];
+      if (sa > 3) scare[3] = simT; else if (sa > 0.5) scare[3] = simT - 0.5;
+    }
     if (f.reach < 0 ? f.t > 16 : f.t - f.reach > HUNT.press + 5) { f.on = false; f.next = simT + HUNT.gap + rnd2() * HUNT.gapMore; }
+  }
+
+  // where the falcon is on screen (-1 to 1 across, y up; null behind the viewer) and its wingspan in CSS pixels
+  function falconOnScreen() {
+    const q = [falcon.x - cam.eye[0], falcon.y - cam.eye[1], falcon.z - cam.eye[2]], z = q[0] * cam.f[0] + q[1] * cam.f[1] + q[2] * cam.f[2];
+    if (z < 0.5) return null;
+    const t = Math.tan(cam.fov * Math.PI / 360), a = (canvas.clientWidth || 1) / (canvas.clientHeight || 1);
+    return { x: (q[0] * cam.r[0] + q[1] * cam.r[1] + q[2] * cam.r[2]) / z / t / a, y: (q[0] * cam.u[0] + q[1] * cam.u[1] + q[2] * cam.u[2]) / z / t, span: FALCON_SPAN * (canvas.clientHeight / 2) / (z * t) };
   }
 
   function step(dt) {
@@ -1093,7 +1145,7 @@
   let near50 = 0, near30 = 0, eyeSp = 0, eyeCut = true, repicks = 0;
   const peak = { roll: 0, eye: 0, turn: 0 }, eyeWas = [0, 1.7, 0];
   // calm: the gentler flight, for people who have asked their device for less motion
-  let calm = false, jumpT = 0, graceT = 0, jumps = 0, lookLead = 0, shade = 0, shadeShown = 0;
+  let calm = false, jumpT = 0, graceT = 0, jumps = 0, lookLead = 0, shade = 0, shadeShown = 0, falconLook = 0;
   const turnVig = document.getElementById('turnVig');
   const pF = [0, 0, -1];
   const lq = [0, 0, 0];
@@ -1124,7 +1176,7 @@
   function snapChase() {
     const b = follow, sp = Math.hypot(vx[b], vy[b], vz[b]) || 1;
     cf[0] = vx[b] / sp; cf[1] = vy[b] / sp; cf[2] = vz[b] / sp;
-    cp[0] = px[b] + cf[0] * 0.4; cp[1] = py[b] + 0.06; cp[2] = pz[b] + cf[2] * 0.4; roll = 0; lookLead = 0;
+    cp[0] = px[b] + cf[0] * 0.4; cp[1] = py[b] + 0.06; cp[2] = pz[b] + cf[2] * 0.4; roll = 0; lookLead = 0; falconLook = 0;
     cv[0] = vx[b]; cv[1] = vy[b]; cv[2] = vz[b]; camBank = bank[b]; gave[0] = gave[1] = gave[2] = 0; reseat = true;
     pF[0] = cf[0]; pF[1] = cf[1]; pF[2] = cf[2]; eyeCut = true;
   }
@@ -1221,7 +1273,19 @@
     const gz = (calm ? 0 : 0.12 * Math.sin(tl * 0.21)) + lookLead, gy = calm ? 0 : 0.06 * Math.sin(tl * 0.17 + 1);
     const qm = Math.hypot(lq[0], lq[1], lq[2]) || 1, qw = Math.min(1, qm / 14) * 0.9 / qm;
     let gdx = cf[0] + lq[0] * qw, gdy = cf[1] * 0.7 + lq[1] * qw * 0.6, gdz = cf[2] + lq[2] * qw; const gh = Math.hypot(gdx, gdz) || 1;
-    gdy = Math.max(-0.16 * gh, Math.min(0.5 * gh, gdy)); const gl_ = Math.hypot(gdx, gdy, gdz) || 1;
+    gdy = Math.max(-0.16 * gh, Math.min(0.5 * gh, gdy)); let gl_ = Math.hypot(gdx, gdy, gdz) || 1;
+    // In flight, a falcon ahead draws the eye: while it is within 150 m and 70 degrees of where you are looking, the
+    // head turns toward it, half way at most, and lets it go once it has passed or the flock turns away.
+    if (s > 0 && dt > 0) {
+      let want = 0;
+      if (falcon.on && !calm) { const qx = falcon.x - cp[0], qy = falcon.y - cp[1], qz = falcon.z - cp[2], ql = Math.hypot(qx, qy, qz) || 1;
+        if (ql < 150 && (qx * gdx + qy * gdy + qz * gdz) / (ql * gl_) > 0.34) want = 1; }
+      falconLook += (want - falconLook) * (1 - Math.exp(-dt * (want ? 1.8 : 1)));
+    }
+    if (falconLook > 0.001) {
+      const qx = falcon.x - cp[0], qy = falcon.y - cp[1], qz = falcon.z - cp[2], ql = Math.hypot(qx, qy, qz) || 1, k = 0.5 * falconLook * s;
+      gdx = gdx / gl_ * (1 - k) + qx / ql * k; gdy = gdy / gl_ * (1 - k) + qy / ql * k; gdz = gdz / gl_ * (1 - k) + qz / ql * k; gl_ = Math.hypot(gdx, gdy, gdz) || 1;
+    }
     const Lc = [cp[0] + gdx / gl_ * 30 + r0[0] * 30 * gz, cp[1] + gdy / gl_ * 30 + 30 * gy + 5, cp[2] + gdz / gl_ * 30 + r0[2] * 30 * gz];
     const aspect = (canvas.clientWidth || 1) / (canvas.clientHeight || 1), pf = Math.max(0, Math.min(1, (1.2 - aspect) / 0.7));
     const Lg = [F[0] * mix(0.5, 0.92, pf) + 34 * (1 - pf), F[1] * mix(0.42, 0.62, pf) + mix(40, 20, pf), F[2]];
@@ -1316,7 +1380,7 @@
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     const B = birdProg.u; gl.useProgram(birdProg.p);
     gl.uniformMatrix4fv(B.uVP, false, VP); gl.uniform3fv(B.uCam, cam.eye); gl.uniform3fv(B.uSun, SUN);
-    gl.uniform1f(B.uTime, time); gl.uniform1f(B.uSimT, simT); gl.uniform4fv(B['uWave[0]'], waves); gl.uniform4fv(B.uScare, scare);
+    gl.uniform1f(B.uTime, time); gl.uniform1f(B.uSimT, simT); gl.uniform4fv(B['uWave[0]'], waves); gl.uniform4fv(B.uScare, scare); gl.uniform1f(B.uScareR, scareR);
     gl.uniform1f(B.uPx, h / (2 * tanH));
     gl.uniform1f(B.uSize, 0.4); gl.uniform1f(B.uSpread, 5.0); gl.uniform1f(B.uFar, 0.8 + (air.far - 0.8) * here.w); gl.uniform1f(B.uAir, air.haze * here.w); gl.uniform1f(B.uLand, land > 0 ? 1 : 0);
     gl.uniform1f(B.uStar, 1); gl.uniform1f(B.uShut, wingShut);
@@ -1362,8 +1426,13 @@
     if (falcon.on) {
       falconInst[0] = falcon.x; falconInst[1] = falcon.y; falconInst[2] = falcon.z; falconInst[3] = falcon.vx; falconInst[4] = falcon.vy; falconInst[5] = falcon.vz;
       gl.bindBuffer(gl.ARRAY_BUFFER, falconBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, falconInst);
-      gl.uniform1f(B.uSize, 1.0); gl.uniform1f(B.uCopy, 0); gl.uniform1f(B.uMinPx, 3.4 * pxRatio); gl.uniform1f(B.uStar, 0);
+      // Far off it is drawn at least fourteen pixels across, three times as thick, and solid dark, not paled as a far
+      // starling is, so it reads as one bird against the sky and not a hairline when seen edge-on: the only reading aid
+      // the scene gives. Its slow beat is always shown.
+      gl.uniform1f(B.uSize, FALCON_SPAN); gl.uniform1f(B.uCopy, 0); gl.uniform1f(B.uMinPx, 14 * pxRatio); gl.uniform1f(B.uStar, 0);
+      gl.uniform1f(B.uFar, 0); gl.uniform1f(B.uAir, 0); gl.uniform1f(B.uStill, 0); gl.uniform1f(B.uFat, 2);
       gl.bindVertexArray(falconVao); gl.drawArraysInstanced(gl.TRIANGLES, 0, falconVerts, 1);
+      gl.uniform1f(B.uFat, 0);
     }
     gl.disable(gl.DEPTH_TEST);
 
@@ -1865,11 +1934,23 @@
   /* ---------- timeline, captions, controls ---------- */
   const veil = document.getElementById('veil'), titleEl = document.getElementById('title'), capEl = document.getElementById('caption');
   const soundBtn = document.getElementById('sound'), musicBtn = document.getElementById('music'), replayBtn = document.getElementById('replay');
-  const captions = ['Dusk \u00b7 watching from the dike', 'Leaving the ground', 'Inside the flock · neighbours a metre apart', 'Back to the dike · the light is going', 'Night · the flock drops into the reeds'];
-  let capIdx = 0, capTimer = 0;
+  const captions = ['Dusk \u00b7 watching from the dike', 'Leaving the ground', 'Inside the flock · neighbours a metre apart', 'Back to the dike · the light is going', 'Night · the flock drops into the reeds', ''];
+  // while a falcon is in view, from its approach until it has struck and pulled away, the caption says where to look
+  let capText = captions[0], capTimer = 0, falconCapTill = -1;
+  function falconCaption() {
+    if (!falcon.on || (falcon.reach >= 0 && falcon.t - falcon.reach > HUNT.press + 1)) return simT < falconCapTill;
+    const o = falconOnScreen();
+    if (o && Math.abs(o.x) < 1 && Math.abs(o.y) < 1) {
+      if (!falcon.seen) falcon.seen = Math.abs(o.x) < 0.25 ? 'straight ahead' : o.x < 0 ? 'on the left' : 'on the right';      // where it was first seen, kept for the visit
+      captions[5] = falcon.reach < 0 ? `A peregrine falcon \u00b7 coming in ${falcon.seen}` : 'A peregrine falcon \u00b7 the flock breaks away from it';
+      falconCapTill = simT + 3;
+    }
+    return simT < falconCapTill;
+  }
   function setCaption(i) {
-    if (i === capIdx) return; capIdx = i; capEl.classList.add('swap');
-    clearTimeout(capTimer); capTimer = setTimeout(() => { capEl.textContent = captions[i]; capEl.classList.remove('swap'); }, 1200);
+    const text = captions[i];
+    if (text === capText) return; capText = text; capEl.classList.add('swap');
+    clearTimeout(capTimer); capTimer = setTimeout(() => { capEl.textContent = text; capEl.classList.remove('swap'); }, 1200);
   }
   // People who have asked for less motion get a still view until they press Play, and then the calm flight:
   // a level horizon, a narrower view, slower turns of the head and softened edges. It follows the setting if it changes.
@@ -1982,7 +2063,7 @@
       if (clock > 3 && slowT > 1.5 && simMs > 8.5 && active > 2000) { active = Math.max(2000, Math.floor(active * 0.85)); slowT = 0; simMs *= 0.8; }
       else if (clock > 3 && slowT > 1.5 && ema > 27 && copies > 8) { copies -= 2; slowT = 0; ema = 20; }
       titleEl.classList.toggle('gone', tl > 8.5);
-      setCaption(tl < T_RISE + 1 ? 0 : tl < T_MERGE + 8 ? 1 : !ending || tl < T_LEAVE + 5 ? 2 : tl < T_DOWN + 16 ? 3 : 4);
+      setCaption(falconCaption() ? 5 : tl < T_RISE + 1 ? 0 : tl < T_MERGE + 8 ? 1 : !ending || tl < T_LEAVE + 5 ? 2 : tl < T_DOWN + 16 ? 3 : 4);
     }
     updateFocus(dt || 1 / 60); updateCamera(dt); draw(clock); updateAudio();
   }
@@ -1997,7 +2078,7 @@
     lead.x = HOME[0] - 70; lead.y = HOME[1] - 8; lead.z = HOME[2] + 20; lead.dx = 1; lead.dy = 0; lead.dz = 0;
     for (let i = 0; i < 1300; i++) { simT += H_STEP; leadStep(H_STEP); }
     bank.fill(0); placeBirds();
-    falcon.on = false; falcon.t = 0; falcon.next = simT + 17; falcon.reach = -1;
+    falcon.on = false; falcon.t = 0; falcon.next = simT + 17; falcon.reach = -1; falconCapTill = -1;
     waves.fill(0); for (let i = 0; i < 3; i++) waves[i * 4 + 3] = -1e4; waveIdx = 0; lastWave = -1e4; scare[3] = -1e4; startleAt = -1e4;
     for (let a = 0; a < 3; a++) { focus[a] = focusSm[a] = [lead.x, lead.y, lead.z][a]; focusDir[a] = a ? 0 : 1; lq[a] = 0; }
     for (let i = 0; i < 60; i++) step(1 / 60);
@@ -2098,7 +2179,7 @@
     // and a click on it: startles the flock at that spot (nx, ny from -1 to 1, y up); true if a bird was there
     startle: (nx, ny) => startle(nx, ny),
     stats: () => ({ active, copies, birds: active * copies, ema, tl, simMs, turnRate, turnDir, climb: cf[1], pad: mPad ? mPad.g.gain.value : null,
-      roll, eyeSpeed: eyeSp, near50, near30, repicks, jumps, calm, shade, lookLead, fov: cam.fov, peak: { roll: peak.roll, eye: peak.eye, turn: peak.turn } }),
+      roll, eyeSpeed: eyeSp, near50, near30, repicks, jumps, calm, shade, lookLead, falconLook, fov: cam.fov, peak: { roll: peak.roll, eye: peak.eye, turn: peak.turn } }),
     seed: n => { resetFlock(n); draw(clock); return n; }, hold: on => { frozen = on !== false; return frozen; }, near: nearField,
     calm: on => { if (on !== undefined) calm = !!on; return calm; },
     field: () => { senseFlock(); return nodes.map(n => ({ w: +n.w.toFixed(3), a: +n.a.toFixed(2) })); },
@@ -2117,7 +2198,8 @@
     // the evening's end: on or off (off, the flight inside goes on until Replay), how far the flock has been called down, and the share of birds still in the air
     ending: on => { if (on !== undefined) ending = !!on; return { on: ending, land: +land.toFixed(3), aloft: +aloft.toFixed(3), leader: +lead.y.toFixed(1), leave: T_LEAVE, down: [T_DOWN, T_DOWN + D_DOWN] }; },
     air: o => { if (o) { if (o.far !== undefined) air.far = +o.far; if (o.haze !== undefined) air.haze = +o.haze; } return Object.assign({}, air); },
-    falcon: o => ({ ...(o ? (Object.assign(HUNT, o), {}) : {}), hunt: Object.assign({}, HUNT), reach: +falcon.reach.toFixed(2), on: falcon.on, at: [falcon.x, falcon.y, falcon.z].map(v => +v.toFixed(1)), v: [falcon.vx, falcon.vy, falcon.vz].map(v => +v.toFixed(1)), fromViewer: +Math.hypot(falcon.x - here.x, falcon.y - here.y, falcon.z - here.z).toFixed(1), sinceStrike: +(simT - lastWave).toFixed(2), t: +falcon.t.toFixed(2), simT: +simT.toFixed(2),
+    falcon: o => ({ ...(o ? (Object.assign(HUNT, o), {}) : {}), hunt: Object.assign({}, HUNT), reach: +falcon.reach.toFixed(2), on: falcon.on,
+      screen: (o => o && { x: +o.x.toFixed(2), y: +o.y.toFixed(2), span: +o.span.toFixed(1) })(falconOnScreen()), at: [falcon.x, falcon.y, falcon.z].map(v => +v.toFixed(1)), v: [falcon.vx, falcon.vy, falcon.vz].map(v => +v.toFixed(1)), fromViewer: +Math.hypot(falcon.x - here.x, falcon.y - here.y, falcon.z - here.z).toFixed(1), sinceStrike: +(simT - lastWave).toFixed(2), t: +falcon.t.toFixed(2), simT: +simT.toFixed(2),
       // how far it is from where the flock is thickest and from the nearest bird, and how many birds are close enough to flee it
       ...(() => { let nd = 1e12, c = 0; for (let i = 0; i < active; i++) { const dx = px[i] - falcon.x, dy = py[i] - falcon.y, dz = pz[i] - falcon.z, d = dx * dx + dy * dy + dz * dz; if (d < nd) nd = d; if (d < 1024) c++; }
         return { fromCentre: +Math.hypot(falcon.x - focus[0], falcon.y - focus[1], falcon.z - focus[2]).toFixed(1), nearest: +Math.sqrt(nd).toFixed(1), within32: c, speed: +Math.hypot(falcon.vx, falcon.vy, falcon.vz).toFixed(1) }; })() }),
